@@ -1,0 +1,31 @@
+/* Agenda/Calendário e modal de eventos do dia
+   (o grid de dias e as células são estilizados via JS em agenda.js,
+   pois são gerados dinamicamente; aqui ficam os itens de evento do modal) */
+
+.item-evento {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.item-evento .btn-excluir {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.2s;
+  font-weight: 600;
+}
+
+.item-evento .btn-excluir:hover {
+  background: #dc2626;
+}

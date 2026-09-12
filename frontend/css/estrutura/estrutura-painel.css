@@ -1,0 +1,136 @@
+/* Estrutura geral do dashboard: barra-lateral, menu, top bar, grid de conteúdo */
+
+.container-painel {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.barra-lateral {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+}
+
+.logo-barra-lateral {
+  max-width: 140px;
+  margin-bottom: 8px;
+}
+
+.subtitulo-barra-lateral {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 35px;
+  line-height: 1.4;
+  text-align: center;
+  font-weight: bold;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.menu a:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.menu a.ativo {
+  background-color: #eff6ff;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.menu #btn-sair {
+  background-color: transparent;
+  margin-top: auto;
+  color: #64748b;
+  border-radius: 8px;
+}
+
+.menu #btn-sair:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.layout-principal {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-superior {
+  height: 70px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.grade-conteudo {
+  display: flex;
+  padding: 40px;
+  gap: 30px;
+  flex: 1;
+}
+
+.conteudo-principal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}
+
+.barra-direita {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cartao-direita {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.cartao-direita h3 {
+  font-size: 1.1rem;
+  color: #1e293b;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.tarefas-vazias p {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 15px 0;
+}

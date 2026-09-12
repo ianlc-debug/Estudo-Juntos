@@ -1,0 +1,108 @@
+/* Telas de login, cadastro e recuperação de senha */
+
+.pagina-login {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.container-login {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+}
+
+.logo {
+  max-width: 160px;
+  margin-bottom: 20px;
+  align-content: center;
+  border-radius: 10px;
+}
+
+.container-login p {
+  color: #64748b;
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+.container-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.container-login input {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #334155;
+  background-color: #ffffff;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.container-login input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.esqueci-senha {
+  font-size: 0.85rem;
+  text-align: right;
+  display: block;
+  margin-top: -4px;
+}
+
+.container-login button[type="submit"] {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  height: 46px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background-color 0.2s;
+  margin-top: 8px;
+}
+
+.container-login button[type="submit"]:hover {
+  background-color: #2563eb;
+}
+
+.link-cadastro {
+  font-size: 0.9rem;
+  margin-top: 24px;
+  color: #64748b !important;
+}
+
+.btn-seta-voltar {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.btn-seta-voltar:hover {
+  transform: translateX(-3px);
+  color: #334155;
+}

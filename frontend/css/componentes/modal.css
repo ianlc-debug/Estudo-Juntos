@@ -1,0 +1,125 @@
+/* Modais genéricos: criar grupo, notificações, detalhes do dia, convites... */
+
+.modal-fundo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 0.2s ease;
+}
+
+.modal-conteudo {
+  background-color: #ffffff;
+  padding: 35px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: scaleUpModal 0.25s ease-out forwards;
+}
+
+@keyframes scaleUpModal {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.btn-fechar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.btn-fechar:hover {
+  color: #475569;
+}
+
+.modal-conteudo h2 {
+  font-size: 1.35rem;
+  color: #1e293b;
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+
+.modal-conteudo form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-conteudo input,
+.modal-conteudo select {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #334155;
+  background-color: #ffffff;
+  outline: none;
+}
+
+.modal-conteudo input:focus,
+.modal-conteudo select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.modal-conteudo button[type="submit"] {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  height: 46px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.modal-conteudo button[type="submit"]:hover {
+  background-color: #2563eb;
+}
+
+.mensagem-erro-inline {
+  display: flex;
+  align-items: center;
+  color: #ef4444;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-left: 10px;
+  white-space: nowrap;
+  animation: fadeInError 0.2s ease-in-out forwards;
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

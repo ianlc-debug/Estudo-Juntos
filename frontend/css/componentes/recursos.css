@@ -1,0 +1,56 @@
+/* Tela de Recursos (materiais dos grupos) */
+
+#view-recursos {
+  display: block;
+  width: 100%;
+}
+
+.view-recursos .banner-boas-vindas {
+  padding-bottom: 30px;
+}
+
+.cartao-grupo-recursos {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.cartao-grupo-recursos h3 {
+  margin: 0 0 18px;
+  color: #1e293b;
+  font-size: 1.2rem;
+}
+
+.recurso-vazio {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 35px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.recurso-vazio i {
+  font-size: 38px;
+  color: #94a3b8;
+  margin-bottom: 15px;
+}
+
+.recurso-vazio p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.caixa-estado-vazio {
+  margin-top: 20px;
+  background: #ffffff; 
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}

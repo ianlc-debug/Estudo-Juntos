@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estudo+Juntos</title>
+    <!-- Base -->
+    <link rel="stylesheet" href="css/base/reset.css" />
+
+    <!-- Estrutura -->
+    <link rel="stylesheet" href="css/estrutura/estrutura-painel.css" />
+
+    <!-- Componentes -->
+    <link rel="stylesheet" href="css/componentes/autenticacao.css" />
+    <link rel="stylesheet" href="css/componentes/busca.css" />
+    <link rel="stylesheet" href="css/componentes/perfil.css" />
+    <link rel="stylesheet" href="css/componentes/mensagens.css" />
+    <link rel="stylesheet" href="css/componentes/recursos.css" />
+    <link rel="stylesheet" href="css/componentes/painel-comum.css" />
+    <link rel="stylesheet" href="css/componentes/grupos.css" />
+    <link rel="stylesheet" href="css/componentes/modal.css" />
+    <link rel="stylesheet" href="css/componentes/sala-de-aula.css" />
+    <link rel="stylesheet" href="css/componentes/agenda.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- ============ Tela: Login ============ -->
+    <!-- ===================== AUTENTICAÇÃO ===================== -->
+    <div id="tela-login" class="pagina-login">
+      <div class="container-login">
+        <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
+        <p>Acesse sua conta</p>
+        <form id="formulario-login">
+          <input
+            type="text"
+            id="campo-usuario"
+            placeholder="Nome de Usuário"
+            required
+          />
+          <input type="password" placeholder="Senha" required />
+          <a href="#" id="link-esqueci-senha" class="esqueci-senha"
+            >Esqueceu a senha?</a
+          >
+          <button type="submit">ENTRAR</button>
+        </form>
+        <p class="link-cadastro">
+          Novo por aqui? <a href="#" id="link-cadastro">Cadastre-se</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ Tela: Esqueci minha senha ============ -->
+    <div id="tela-recuperar-senha" class="pagina-login escondido">
+      <div class="container-login">
+        <button class="btn-seta-voltar voltar-login">⬅</button>
+        <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
+        <p>Recuperar Senha</p>
+        <form id="formulario-recuperar-senha">
+          <input type="text" placeholder="Nome de Usuário" required />
+          <input type="email" placeholder="E-mail Cadastrado" required />
+          <input type="password" placeholder="Nova Senha" required />
+          <button type="submit">ALTERAR SENHA</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============ Tela: Cadastro ============ -->
+    <!-- Tela de cadastro -->
+    <div id="tela-cadastro" class="pagina-login escondido">
+      <div class="container-login">
+        <button class="btn-seta-voltar voltar-login">⬅</button>
+        <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
+        <p>Crie sua conta</p>
+        <form id="formulario-cadastro">
+          <input type="text" placeholder="Nome de Usuário" required />
+          <input type="email" placeholder="E-mail" required />
+          <input type="password" placeholder="Senha" required />
+          <button type="submit">CADASTRAR</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============ Dashboard (pós-login) ============ -->
+    <!-- ===================== DASHBOARD ===================== -->
+    <div id="tela-painel" class="container-painel escondido">
+      <aside class="barra-lateral">
+        <img
+          src="assets/images/logo.png"
+          alt="Logo Estudo + Juntos"
+          class="logo-barra-lateral"
+        />
+        <p class="subtitulo-barra-lateral">
+          Plataforma de grupo de estudos universitários
+        </p>
+        <nav class="menu">
+          <a href="#" id="nav-btn-inicio" class="ativo"
+            ><i class="fa-solid fa-house"></i> Início</a
+          >
+          <a href="#" id="nav-btn-grupos"
+            ><i class="fa-solid fa-users"></i> Grupos</a
+          >
+          <a href="#" id="nav-btn-agenda"
+            ><i class="fa-solid fa-calendar"></i> Agenda</a
+          >
+          <a href="#" id="nav-btn-recursos"
+            ><i class="fa-solid fa-folder"></i> Recursos</a
+          >
+          <a href="#" id="nav-btn-mensagens"
+            ><i class="fa-solid fa-comment"></i> Mensagens</a
+          >
+          <a href="#" id="nav-btn-perfil"
+            ><i class="fa-solid fa-user"></i> Perfil</a
+          >
+          <a href="#" id="btn-sair"
+            ><i class="fa-solid fa-right-from-bracket"></i> Sair</a
+          >
+        </nav>
+      </aside>
+
+      <div class="layout-principal">
+        <header class="barra-superior">
+          <div
+            class="container-busca"
+            style="position: relative; flex: 1; max-width: 400px"
+          >
+            <i
+              class="fa-solid fa-magnifying-glass"
+              style="
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #64748b;
+              "
+            ></i>
+            <input
+              type="text"
+              placeholder="Pesquisar grupos, matérias..."
+              class="barra-busca"
+              style="width: 100%; padding-left: 38px; box-sizing: border-box"
+            />
+
+            <div
+              id="sugestoes-busca"
+              class="caixa-sugestoes-busca escondido"
+            ></div>
+          </div>
+
+          <div class="area-perfil">
+            <span
+              class="icone-notificacao"
+              id="btn-sino-notificacoes"
+              style="cursor: pointer"
+              ><i class="fa-solid fa-bell"></i
+            ></span>
+            <div class="foto-perfil"></div>
+          </div>
+        </header>
+
+        <!-- Modal: notificações -->
+        <div id="modal-notificacoes" class="modal-fundo escondido">
+          <div
+            class="modal-conteudo"
+            style="max-width: 380px; text-align: center; padding: 30px"
+          >
+            <button id="btn-fechar-notificacoes" class="btn-fechar">
+              &times;
+            </button>
+            <i
+              class="fa-regular fa-bell-slash"
+              style="
+                font-size: 3rem;
+                color: #94a3b8;
+                margin-bottom: 15px;
+                display: block;
+              "
+            ></i>
+            <h2 style="margin-bottom: 10px; font-size: 1.25rem">
+              Notificações
+            </h2>
+            <p style="color: #64748b; font-size: 0.95rem">
+              Você não tem nenhuma notificação no momento.
+            </p>
+          </div>
+        </div>
+
+          <!-- Views do dashboard, alternadas via js/navigation.js -->
+        <div class="grade-conteudo">
+          <main class="conteudo-principal">
+            <!-- ===== View: Início (dashboard principal) ===== -->
+            <!-- View: Início -->
+            <div id="view-inicio">
+              <section class="banner-boas-vindas">
+                <h1 id="boas-vindas-usuario">OLÁ, ALUNA</h1>
+                <p class="subtitulo-boas-vindas">Que bom ter você aqui</p>
+                <p>
+                  Encontre grupos, participe de estudos e evolua ainda mais na
+                  universidade.
+                </p>
+              </section>
+
+              <section class="secao-painel">
+                <div class="cabecalho-secao">
+                  <h2>Grupos em destaque</h2>
+                  <a href="#" class="ver-tudo">ver todos →</a>
+                </div>
+                <div id="estado-vazio-grupos" class="caixa-estado-vazio">
+                  <p>Você não está em nenhum grupo no momento.</p>
+                </div>
+                <div id="grade-grupos" class="grade-layout-grupos"></div>
+              </section>
+
+              <section class="secao-painel">
+                <div class="cabecalho-secao">
+                  <h2>Próximas sessões</h2>
+                  <a href="#" id="btn-ver-agenda-inicio" class="ver-tudo"
+                    >ver agenda →</a
+                  >
+                </div>
+                <div class="caixa-estado-vazio">
+                  <p>
+                    Você não possui nenhuma sessão de estudo agendada no
+                    momento.
+                  </p>
+                </div>
+              </section>
+            </div>
+
+            <!-- ===== View: Recursos (materiais por grupo) ===== -->
+            <!-- View: Recursos -->
+            <div id="view-recursos" class="escondido">
+              <section class="banner-boas-vindas">
+                <h1>Recursos Compartilhados</h1>
+
+                <p class="subtitulo-boas-vindas">
+                  Materiais disponíveis dos seus grupos
+                </p>
+              </section>
+
+              <div id="container-recursos"></div>
+            </div>
+
+            <!-- ===== View: Agenda (calendário) ===== -->
+            <!-- View: Agenda -->
+            <div id="view-agenda" class="escondido">
+              <section class="banner-boas-vindas">
+                <h1>Minha Agenda</h1>
+                <p class="subtitulo-boas-vindas">
+                  Visualize seus compromissos e sessões de estudo
+                </p>
+              </section>
+
+              <section class="secao-painel">
+                <div
+                  class="cartao-mensagens"
+                  style="padding: 24px; background: #fff; border-radius: 12px"
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <label
+                      for="select-mes-agenda"
+                      style="font-weight: 600; color: #1e293b"
+                      >Selecione o Mês:</label
+                    >
+                    <select
+                      id="select-mes-agenda"
+                      style="
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        border: 1px solid #cbd5e1;
+                        background: #fff;
+                        font-weight: 500;
+                        color: #1e293b;
+                        cursor: pointer;
+                      "
+                    >
+                      <option value="0">Janeiro</option>
+                      <option value="1">Fevereiro</option>
+                      <option value="2">Março</option>
+                      <option value="3">Abril</option>
+                      <option value="4">Maio</option>
+                      <option value="5">Junho</option>
+                      <option value="6">Julho</option>
+                      <option value="7">Agosto</option>
+                      <option value="8">Setembro</option>
+                      <option value="9">Outubro</option>
+                      <option value="10">Novembro</option>
+                      <option value="11">Dezembro</option>
+                    </select>
+                  </div>
+
+                  <div class="container-calendario">
+                    <div
+                      class="dias-semana-calendario"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(7, 1fr);
+                        text-align: center;
+                        font-weight: bold;
+                        color: #64748b;
+                        margin-bottom: 10px;
+                        font-size: 0.9rem;
+                      "
+                    >
+                      <div>Dom</div>
+                      <div>Seg</div>
+                      <div>Ter</div>
+                      <div>Qua</div>
+                      <div>Qui</div>
+                      <div>Sex</div>
+                      <div>Sáb</div>
+                    </div>
+                    <div
+                      id="grade-dias-calendario"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(7, 1fr);
+                        gap: 8px;
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- ===== View: Grupos (meus grupos, entrar por código) ===== -->
+            <!-- View: Grupos -->
+            <div id="view-grupos" class="escondido">
+              <section class="secao-painel">
+                <div class="cabecalho-secao">
+                  <h2>Meus Grupos</h2>
+                </div>
+                <div id="estado-vazio-meus-grupos" class="caixa-estado-vazio">
+                  <p>Você ainda não criou nenhum grupo.</p>
+                </div>
+                <div id="grade-meus-grupos" class="grade-layout-grupos"></div>
+              </section>
+
+              <section class="secao-painel">
+                <div class="cabecalho-secao">
+                  <h2>Grupos Privados</h2>
+                </div>
+
+                <div class="container-codigo-privado">
+                  <p class="instrucao-codigo">
+                    Digite o código de um grupo privado para solicitar a
+                    entrada:
+                  </p>
+                  <form
+                    id="formulario-entrar-grupo-privado"
+                    class="container-campo-codigo"
+                  >
+                    <input
+                      type="text"
+                      id="campo-codigo-grupo-privado"
+                      placeholder="Código do Grupo Privado"
+                      required
+                    />
+                    <button type="submit" class="btn-entrar">
+                      Solicitar Acesso
+                    </button>
+                    <span
+                      id="mensagem-erro-grupo-privado"
+                      class="mensagem-erro-inline"
+                    ></span>
+                  </form>
+                </div>
+
+                <div id="estado-vazio-grupos-privados" class="caixa-estado-vazio">
+                  <p>
+                    Você não possui solicitações para grupos privados no
+                    momento.
+                  </p>
+                </div>
+                <div id="private-grade-grupos" class="grade-layout-grupos"></div>
+              </section>
+
+              <section class="secao-painel">
+                <div class="cabecalho-secao">
+                  <h2>Grupos Abertos</h2>
+                </div>
+
+                <div class="container-codigo-privado">
+                  <p class="instrucao-codigo">
+                    Digite o código de um grupo aberto para entrar
+                    imediatamente:
+                  </p>
+                  <form
+                    id="formulario-entrar-grupo-publico"
+                    class="container-campo-codigo"
+                  >
+                    <input
+                      type="text"
+                      id="campo-codigo-grupo-publico"
+                      placeholder="Código do Grupo Aberto"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      class="btn-entrar"
+                      style="background-color: #2563eb"
+                    >
+                      Ingressar no Grupo
+                    </button>
+                    <span
+                      id="mensagem-erro-grupo-publico"
+                      class="mensagem-erro-inline"
+                    ></span>
+                  </form>
+                </div>
+
+                <div id="estado-vazio-grupos-publicos" class="caixa-estado-vazio">
+                  <p>Nenhum grupo aberto ingressado no momento.</p>
+                </div>
+                <div id="public-grade-grupos" class="grade-layout-grupos"></div>
+              </section>
+            </div>
+
+            <!-- ===== View: Mensagens (contatos) ===== -->
+            <!-- View: Mensagens -->
+            <div id="view-mensagens" class="escondido">
+              <section class="banner-boas-vindas">
+                <h1>Mensagens</h1>
+                <p class="subtitulo-boas-vindas">
+                  Converse com seus colegas de estudo
+                </p>
+              </section>
+
+              <section class="secao-painel">
+                <div class="cartao-mensagens">
+                  <div class="area-adicionar-contato">
+                    <input
+                      type="text"
+                      id="campo-nome-contato"
+                      placeholder="E-mail do contato"
+                    />
+
+                    <button id="btn-adicionar-contato">Adicionar</button>
+                  </div>
+
+                  <h3>Contatos</h3>
+
+                  <div id="lista-contatos"></div>
+
+                  <div
+                    class="caixa-estado-vazio"
+                    style="
+                      border: 2px dashed #cbd5e1;
+                      border-radius: 10px;
+                      padding: 30px;
+                      text-align: center;
+                      background: #f8fafc;
+                      margin-top: 15px;
+                    "
+                  >
+                    <p
+                      style="
+                        color: #64748b;
+                        margin: 0;
+                        font-size: 0.95rem;
+                        font-weight: 500;
+                      "
+                    >
+                      Você não possui nenhum contato adicionado no momento.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- ===== View: Meu Perfil ===== -->
+            <!-- View: Meu Perfil -->
+            <div id="view-perfil" class="escondido">
+              <section class="banner-boas-vindas">
+                <h1>Meu Perfil</h1>
+                <p class="subtitulo-boas-vindas">
+                  Gerencie suas informações pessoais
+                </p>
+              </section>
+
+              <div class="secao-painel">
+                <div class="info-aluno">
+                  <div id="avatar-perfil">A</div>
+
+                  <div style="flex: 1">
+                    <h2 id="nome-perfil">ALUNO(A)</h2>
+
+                    <p>
+                      Quantidade Grupos Participante:
+                      <span id="perfil-grupos-participando">0</span>
+                    </p>
+                    <p>Grupos Criados: <span id="perfil-grupos-criados">0</span></p>
+                    <p>E-mail: <span id="email-perfil"></span></p>
+                    <div class="acoes-perfil"></div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px">
+                      <button id="btn-editar-perfil" class="btn-acao-principal">
+                        Editar Perfil
+                      </button>
+
+                      <button id="btn-alterar-senha">Alterar Senha</button>
+                      <button id="btn-excluir-conta">Excluir Conta</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== View: Sala de aula de um grupo (horários, mural de atividades e recados) ===== -->
+            <!-- View: Sala de aula de um grupo (aberta ao clicar em um grupo) -->
+            <div id="view-sala-aula" class="escondido">
+              <button
+                id="btn-voltar-grupos"
+                style="
+                  background: none;
+                  border: none;
+                  color: #64748b;
+                  font-weight: 600;
+                  cursor: pointer;
+                  margin-bottom: 15px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <i class="fa-solid fa-arrow-left"></i> Voltar para Grupos
+              </button>
+
+              <section
+                class="banner-boas-vindas"
+                style="
+                  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                  margin-bottom: 25px;
+                  padding: 30px;
+                  border-radius: 16px;
+                  position: relative;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                  "
+                >
+                  <div>
+                    <h1 id="nome-grupo-sala" style="margin-bottom: 5px">
+                      Nome do Grupo
+                    </h1>
+                    <p
+                      id="materia-grupo-sala"
+                      class="subtitulo-boas-vindas"
+                      style="margin-bottom: 15px"
+                    >
+                      Matéria
+                    </p>
+
+                    <div
+                      style="
+                        font-size: 0.9rem;
+                        opacity: 0.9;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                        margin-bottom: 15px;
+                      "
+                    >
+                      <p>
+                        <i class="fa-solid fa-user" style="width: 20px"></i>
+                        <strong>Criador:</strong> Você
+                      </p>
+                      <p>
+                        <i class="fa-solid fa-lock" style="width: 20px"></i>
+                        <strong>Tipo:</strong>
+                        <span id="tipo-grupo-sala"></span>
+                      </p>
+                      <p>
+                        <i class="fa-solid fa-key" style="width: 20px"></i>
+                        <strong>Código do Grupo:</strong>
+                        <span
+                          id="codigo-grupo-sala"
+                          style="
+                            font-family: monospace;
+                            background: rgba(255, 255, 255, 0.2);
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            font-weight: bold;
+                            letter-spacing: 1px;
+                          "
+                          >000000</span
+                        >
+                      </p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap">
+                      <button
+                        id="btn-abrir-convite-membro"
+                        style="
+                          background-color: #10b981;
+                          color: white;
+                          border: none;
+                          padding: 8px 16px;
+                          border-radius: 6px;
+                          font-weight: bold;
+                          cursor: pointer;
+                          font-size: 0.85rem;
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                        "
+                      >
+                        <i class="fa-solid fa-user-plus"></i> Convidar Membro
+                      </button>
+                      <button
+                        id="btn-excluir-grupo"
+                        style="
+                          background-color: #ef4444;
+                          color: white;
+                          border: none;
+                          padding: 8px 16px;
+                          border-radius: 6px;
+                          font-weight: bold;
+                          cursor: pointer;
+                          font-size: 0.85rem;
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                        "
+                      >
+                        <i class="fa-solid fa-trash-can"></i> Excluir Grupo
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.1);
+                      padding: 20px;
+                      border-radius: 12px;
+                      min-width: 280px;
+                      backdrop-filter: blur(4px);
+                    "
+                  >
+                    <h4
+                      style="
+                        color: white;
+                        margin-bottom: 10px;
+                        font-size: 0.95rem;
+                      "
+                    >
+                      <i class="fa-solid fa-clock"></i> Horários das Reuniões:
+                    </h4>
+                    <div
+                      id="banner-horarios-sala"
+                      style="
+                        font-size: 0.85rem;
+                        opacity: 0.9;
+                        margin-bottom: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                      "
+                    ></div>
+                    <hr
+                      style="
+                        border: 0;
+                        border-top: 1px solid rgba(255, 255, 255, 0.2);
+                        margin-bottom: 12px;
+                      "
+                    />
+                    <button
+                      id="btn-ver-membros"
+                      style="
+                        width: 100%;
+                        background: white;
+                        color: #1e293b;
+                        border: none;
+                        padding: 10px;
+                        border-radius: 8px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                      "
+                    >
+                      <i class="fa-solid fa-users"></i> Ver Participantes (<span
+                        id="contador-membros-sala"
+                        >1</span
+                      >)
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <div
+                id="widgets-principais-sala"
+                style="display: flex; flex-direction: column; gap: 25px"
+              >
+                <div class="caixa-cartao-sala">
+                  <label class="titulo-secao-sala"
+                    >🗓️ Vincular Novos Horários Semanais</label
+                  >
+                  <div
+                    style="
+                      display: flex;
+                      gap: 10px;
+                      flex-wrap: wrap;
+                      margin-bottom: 15px;
+                    "
+                  >
+                    <select
+                      id="select-dia-sala"
+                      style="
+                        flex: 1;
+                        min-width: 150px;
+                        height: 42px;
+                        padding: 0 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: white;
+                      "
+                    >
+                      <option value="" disabled selected>Dia da Semana</option>
+                      <option value="Domingo">Domingo</option>
+                      <option value="Segunda-feira">Segunda-feira</option>
+                      <option value="Terça-feira">Terça-feira</option>
+                      <option value="Quarta-feira">Quarta-feira</option>
+                      <option value="Quinta-feira">Quinta-feira</option>
+                      <option value="Sexta-feira">Sexta-feira</option>
+                      <option value="Sábado">Sábado</option>
+                    </select>
+                    <select
+                      id="select-horario-sala"
+                      style="
+                        flex: 1;
+                        min-width: 150px;
+                        height: 42px;
+                        padding: 0 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: white;
+                      "
+                    >
+                      <option value="" disabled selected>Horário</option>
+                      <option value="08-10">08:00 às 10:00</option>
+                      <option value="10-12">10:00 às 12:00</option>
+                      <option value="14-16">14:00 às 16:00</option>
+                      <option value="16-18">16:00 às 18:00</option>
+                      <option value="18-20">18:00 às 20:00</option>
+                      <option value="20-22">20:00 às 22:00</option>
+                    </select>
+                    <button id="btn-adicionar-horario" class="btn-acao-principal">
+                      Vincular Horário
+                    </button>
+                  </div>
+                  <div
+                    id="lista-horarios-sala"
+                    style="display: flex; flex-wrap: wrap; gap: 8px"
+                  ></div>
+                </div>
+
+                <div class="caixa-cartao-sala">
+                  <label class="titulo-secao-sala"
+                    >📌 Quadro de Atividades</label
+                  >
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <input
+                      type="text"
+                      id="campo-tarefa-sala"
+                      placeholder="Título ou descrição da nova atividade..."
+                      style="
+                        width: 100%;
+                        height: 42px;
+                        padding: 0 12px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        outline: none;
+                      "
+                    />
+
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                      "
+                    >
+                      <button
+                        type="button"
+                        id="btn-simular-upload"
+                        style="
+                          background: #f1f5f9;
+                          border: 1px dashed #cbd5e1;
+                          padding: 10px 16px;
+                          border-radius: 8px;
+                          color: #475569;
+                          font-weight: 600;
+                          cursor: pointer;
+                          font-size: 0.85rem;
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                        "
+                      >
+                        <i class="fa-solid fa-paperclip"></i> Anexar Arquivo
+                        (PDF, PNG, etc.)
+                      </button>
+                      <button id="btn-publicar-tarefa" class="btn-acao-principal">
+                        Cadastrar Atividade
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    id="feed-tarefas-sala"
+                    style="display: flex; flex-direction: column; gap: 10px"
+                  ></div>
+                </div>
+
+                <div class="caixa-cartao-sala">
+                  <label class="titulo-secao-sala"
+                    >💬 Mural do Grupo</label
+                  >
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <textarea
+                      id="campo-recado-sala"
+                      rows="3"
+                      placeholder="Escreva um comunicado para o grupo..."
+                      style="
+                        width: 100%;
+                        padding: 12px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        font-size: 0.95rem;
+                        resize: none;
+                        outline: none;
+                        font-family: inherit;
+                      "
+                    ></textarea>
+                    <button
+                      id="btn-publicar-recado"
+                      class="btn-acao-principal"
+                      style="align-self: flex-end"
+                    >
+                      Publicar no Mural
+                    </button>
+                  </div>
+                  <div
+                    id="feed-recados-sala"
+                    style="display: flex; flex-direction: column; gap: 12px"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                id="secao-membros-sala"
+                class="escondido caixa-cartao-sala"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                  "
+                >
+                  <label class="titulo-secao-sala" style="margin: 0"
+                    >👥 Integrantes do Grupo</label
+                  >
+                  <button
+                    id="btn-fechar-membros"
+                    style="
+                      background: #f1f5f9;
+                      border: none;
+                      padding: 6px 12px;
+                      border-radius: 6px;
+                      font-weight: bold;
+                      cursor: pointer;
+                      color: #475569;
+                    "
+                  >
+                    Voltar para o Mural
+                  </button>
+                </div>
+                <div
+                  id="lista-membros-sala"
+                  style="display: flex; flex-direction: column; gap: 10px"
+                ></div>
+              </div>
+
+              <div
+                id="secao-convite-sala"
+                class="escondido caixa-cartao-sala"
+                style="margin-top: 20px"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                  "
+                >
+                  <label class="titulo-secao-sala" style="margin: 0"
+                    >✉️ Convidar Usuário para o Grupo</label
+                  >
+                  <button
+                    id="btn-fechar-convite"
+                    style="
+                      background: #f1f5f9;
+                      border: none;
+                      padding: 4px 10px;
+                      border-radius: 6px;
+                      font-weight: bold;
+                      cursor: pointer;
+                      color: #475569;
+                    "
+                  >
+                    Cancelar
+                  </button>
+                </div>
+                <form
+                  id="formulario-convite-grupo"
+                  style="display: flex; flex-direction: column; gap: 12px"
+                >
+                  <input
+                    type="text"
+                    id="campo-nome-convite"
+                    placeholder="Nome de Usuário do Convidado"
+                    style="
+                      width: 100%;
+                      height: 42px;
+                      padding: 0 12px;
+                      border: 1px solid #cbd5e1;
+                      border-radius: 8px;
+                    "
+                    required
+                  />
+                  <input
+                    type="email"
+                    id="campo-email-convite"
+                    placeholder="E-mail do Convidado"
+                    style="
+                      width: 100%;
+                      height: 42px;
+                      padding: 0 12px;
+                      border: 1px solid #cbd5e1;
+                      border-radius: 8px;
+                    "
+                    required
+                  />
+                  <button
+                    type="submit"
+                    class="btn-acao-principal"
+                    style="align-self: flex-end"
+                  >
+                    Enviar Convite Oficial
+                  </button>
+                </form>
+              </div>
+            </div>
+          </main>
+
+          <aside class="barra-direita">
+            <div class="cartao-direita cartao-tarefas">
+              <h3>Tarefas Globais</h3>
+              <div
+                id="container-tarefas-globais"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  margin-top: 10px;
+                "
+              >
+                <div class="tarefas-vazias" style="padding: 5px 0">
+                  <p style="color: #64748b; font-size: 0.9rem">
+                    Nenhuma tarefa pendente
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="cartao-direita cartao-criar-grupo">
+              <h3>Criar Grupo</h3>
+              <p>
+                Não encontrou um grupo ideal? Crie o seu e convide colegas para
+                estudar juntos!
+              </p>
+              <button class="btn-criar">+ Criar grupo</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Modal: criar novo grupo ============ -->
+    <!-- ===================== MODAIS GLOBAIS ===================== -->
+    <div id="modal-criar-grupo" class="modal-fundo escondido">
+      <div class="modal-conteudo">
+        <button id="btn-fechar-modal-criar-grupo" class="btn-fechar">&times;</button>
+        <h2>Criar Novo Grupo</h2>
+        <form id="formulario-criar-grupo">
+          <input type="text" placeholder="Nome do Grupo" required />
+          <input type="text" placeholder="Matéria/Curso" required />
+          <select required>
+            <option value="" disabled selected>Privacidade</option>
+            <option value="publico">Aberto para todos</option>
+            <option value="privado">Apenas convidados</option>
+          </select>
+          <button type="submit">CONCLUIR</button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="js/principal.js"></script>
+
+    <!-- ============ Modal: detalhes/criação de evento do dia (Agenda) ============ -->
+    <div id="modal-detalhes-dia" class="modal-fundo escondido">
+      <div class="modal-conteudo" style="max-width: 400px">
+        <button id="btn-fechar-modal-dia" class="btn-fechar">&times;</button>
+        <h2 id="titulo-modal-dia">Eventos do Dia</h2>
+
+        <div class="container-lista-eventos" style="margin: 15px 0">
+          <strong
+            style="
+              color: #64748b;
+              font-size: 0.85rem;
+              text-transform: uppercase;
+            "
+            >Sua Programação:</strong
+          >
+
+          <div
+            id="lista-eventos-modal-dia"
+            style="
+              margin-top: 8px;
+              max-height: 200px;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+        </div>
+
+        <div
+          style="
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+          "
+        >
+          <strong
+            style="
+              color: #64748b;
+              font-size: 0.85rem;
+              text-transform: uppercase;
+            "
+            >Adicionar Evento Particular:</strong
+          >
+          <form
+            id="formulario-modal-dia"
+            style="display: flex; gap: 10px; margin-top: 8px"
+          >
+            <input
+              type="text"
+              id="campo-modal-dia"
+              placeholder="Ex: Estudar Cálculo..."
+              required
+              style="
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 10px 15px;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;
+              "
+            >
+              +
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+/* Barra de busca do topo e caixa de sugestões de grupos */
+
+.barra-busca {
+  width: 320px;
+  height: 40px;
+  background-color: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.barra-busca:focus {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  width: 360px;
+}
+
+.caixa-sugestoes-busca {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.caixa-sugestoes-busca.escondido {
+  display: none !important;
+}
+
+.item-sugestao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #f8fafc;
+  margin-bottom: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.item-sugestao:last-child {
+  margin-bottom: 0;
+}
+
+.item-sugestao:hover {
+  background-color: #e2e8f0;
+}
+
+.icone-sugestao {
+  font-size: 1.1rem;
+}
+
+.info-sugestao strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.info-sugestao small {
+  font-size: 0.75rem;
+  color: #64748b;
+}

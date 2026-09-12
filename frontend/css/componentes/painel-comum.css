@@ -1,0 +1,69 @@
+/* Elementos reutilizados em várias views do dashboard:
+   banner de boas-vindas, cabeçalho de seção e estado vazio */
+
+.banner-boas-vindas {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+}
+
+.banner-boas-vindas h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.subtitulo-boas-vindas {
+  font-size: 1.1rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.banner-boas-vindas p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.secao-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.cabecalho-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cabecalho-secao h2 {
+  font-size: 1.25rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.ver-tudo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.caixa-estado-vazio {
+  background-color: #ffffff;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+}
+
+.caixa-estado-vazio p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}

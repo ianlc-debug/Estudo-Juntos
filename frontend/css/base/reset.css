@@ -1,0 +1,34 @@
+/* Reset básico e estilos globais compartilhados por toda a aplicação */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f1f5f9;
+  color: #334155;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.escondido {
+  display: none !important;
+}
+
+a {
+  text-decoration: none;
+  color: #3b82f6;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #1d4ed8;
+}
+
+img {
+  align-self: center;
+}

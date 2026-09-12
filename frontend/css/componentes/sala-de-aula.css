@@ -1,0 +1,134 @@
+/* Sala de aula do grupo: horários, mural de atividades e recados */
+
+.caixa-cartao-sala {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 25px;
+  border-radius: 16px;
+}
+
+.titulo-secao-sala {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.btn-acao-principal {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0 20px;
+  height: 42px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-acao-principal:hover {
+  background-color: #2563eb;
+}
+
+.chip-horario {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-remover-chip {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.cartao-post-mural {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 15px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.meta-post-mural {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.cartao-post-mural p {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.acoes-cartao-mural {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.btn-editar-post-mural {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-editar-post-mural:hover {
+  text-decoration: underline;
+}
+
+.btn-excluir-post-mural {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-excluir-post-mural:hover {
+  text-decoration: underline;
+}
+
+.texto-tarefa-concluida {
+  text-decoration: line-through !important;
+  color: #94a3b8 !important;
+  opacity: 0.7;
+}
+
+.item-tarefa-global {
+  background: #f8fafc;
+  border-left: 4px solid #3b82f6;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  border-top: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.item-tarefa-global small {
+  display: block;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+}
