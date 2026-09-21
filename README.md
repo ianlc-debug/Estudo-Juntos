@@ -50,7 +50,7 @@ Certifique-se de ter instalado em seu computador:
 Abra o terminal na pasta de sua preferência e clone o repositório:
 
 ```bash
-git clone <URL_DO_REPOSITORIO_GITHUB>
+git clone <https://github.com/ianlc-debug/Estudo-Juntos.git>
 cd Estudo+Juntos/backend
 
 ```
