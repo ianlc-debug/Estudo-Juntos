@@ -43,7 +43,7 @@ Certifique-se de ter instalado em seu computador:
 
 * **Node.js** (versão LTS recomendada)
 * **Git**
-* Um SGBD MySQL (como **MySQL Workbench**, XAMPP ou similar)
+* Um SGBD MySQL (como **MySQL Workbench**)
 
 ### 2. Clonar o Repositório
 
