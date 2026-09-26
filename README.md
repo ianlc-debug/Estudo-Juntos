@@ -5,7 +5,7 @@
 
 Repositório do back-end da aplicação **Estudo+Juntos**, desenvolvido em Node.js com Express e MySQL para a disciplina de Tecnologias Web 2.
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 * **Node.js** (Ambiente de execução JavaScript)
 * **Express** (Framework web para Node.js)
@@ -15,7 +15,7 @@ Repositório do back-end da aplicação **Estudo+Juntos**, desenvolvido em Node.
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 O projeto segue uma estrutura de monorepo separando as pastas principais:
 ```text
@@ -33,7 +33,7 @@ Estudo+Juntos/
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Como Executar o Projeto Localmente
 
 Siga os passos abaixo para configurar e rodar o back-end na sua máquina:
 
@@ -105,7 +105,7 @@ node index.js
 
 ---
 
-## 📡 Endpoints Disponíveis
+## Endpoints Disponíveis
 
 * **`GET /`**
 * **Descrição:** Rota de teste inicial para verificar se a API está online.
