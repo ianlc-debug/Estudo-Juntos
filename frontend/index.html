@@ -35,34 +35,38 @@
         <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
         <p>Acesse sua conta</p>
         <form id="formulario-login">
-          <input
-            type="text"
-            id="campo-usuario"
-            placeholder="Nome de Usuário"
-            required
-          />
-          <input type="password" placeholder="Senha" required />
-          <a href="#" id="link-esqueci-senha" class="esqueci-senha"
-            >Esqueceu a senha?</a
-          >
-          <button type="submit">ENTRAR</button>
-        </form>
+  <input
+    type="text"
+    id="campo-usuario"
+    placeholder="Nome de Usuário"
+    required
+  />
+  <input 
+    type="password" 
+    id="senha-login" 
+    placeholder="Senha" 
+    required 
+  />
+  <a href="#" id="link-esqueci-senha" class="esqueci-senha"
+    >Esqueceu a senha?</a
+  >
+  <button type="submit">ENTRAR</button>
+</form>
         <p class="link-cadastro">
           Novo por aqui? <a href="#" id="link-cadastro">Cadastre-se</a>
         </p>
       </div>
     </div>
 
-    <!-- ============ Tela: Esqueci minha senha ============ -->
+    <!-- ============ Tela: Recuperar Senha ============ -->
     <div id="tela-recuperar-senha" class="pagina-login escondido">
       <div class="container-login">
         <button class="btn-seta-voltar voltar-login">⬅</button>
         <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
         <p>Recuperar Senha</p>
-        <form id="formulario-recuperar-senha">
-          <input type="text" placeholder="Nome de Usuário" required />
-          <input type="email" placeholder="E-mail Cadastrado" required />
-          <input type="password" placeholder="Nova Senha" required />
+        <form id="formulario-recuperar">
+          <input type="email" id="recuperar-email" placeholder="Digite seu e-mail cadastrado" required />
+          <input type="password" id="recuperar-nova-senha" placeholder="Digite a nova senha (mín. 6 caracteres)" required />
           <button type="submit">ALTERAR SENHA</button>
         </form>
       </div>
@@ -76,9 +80,9 @@
         <img src="assets/images/logo.png" alt="Logo Estudo + Juntos" class="logo" />
         <p>Crie sua conta</p>
         <form id="formulario-cadastro">
-          <input type="text" placeholder="Nome de Usuário" required />
-          <input type="email" placeholder="E-mail" required />
-          <input type="password" placeholder="Senha" required />
+          <input type="text" id="registo-usuario" placeholder="Nome de Usuário" required />
+          <input type="email" id="registo-email" placeholder="E-mail" required />
+          <input type="password" id="registo-senha" placeholder="Senha" required />
           <button type="submit">CADASTRAR</button>
         </form>
       </div>
