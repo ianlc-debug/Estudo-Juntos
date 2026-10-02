@@ -31,11 +31,11 @@ app.post('/api/registro', async (req, res) => {
         return res.status(400).json({ erro: 'Formato de e-mail inválido.' });
     }
 
-    // 3. Validação de restrições do Nome de Usuário (3 a 20 caracteres, sem espaços ou símbolos especiais)
-    const regexUsuario = /^[a-zA-Z0-9_]{3,20}$/;
+    // 3. Validação de restrições do Nome de Usuário (Apenas letras com acentos e espaços)
+    const regexUsuario = /^[a-zA-ZÀ-ÿ\s]+$/;
     if (!regexUsuario.test(nome_usuario)) {
         return res.status(400).json({ 
-            erro: 'O nome de usuário deve ter entre 3 e 20 caracteres e conter apenas letras, números e sublinhado (_).' 
+            erro: 'O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou sublinhados).' 
         });
     }
 
@@ -178,6 +178,24 @@ app.put('/api/usuarios/:identificador', async (req, res) => {
 
     if (!novoNome && !novoEmail) {
         return res.status(400).json({ erro: 'Forneça ao menos um campo para atualizar.' });
+    }
+
+    // Se o novo nome foi enviado, valida se ele cumpre as regras (apenas letras e espaços)
+    if (novoNome) {
+        const regexUsuario = /^[a-zA-ZÀ-ÿ\s]+$/;
+        if (!regexUsuario.test(novoNome)) {
+            return res.status(400).json({ 
+                erro: 'O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou sublinhados).' 
+            });
+        }
+    }
+
+    // Se o novo e-mail foi enviado, valida a estrutura
+    if (novoEmail) {
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!regexEmail.test(novoEmail)) {
+            return res.status(400).json({ erro: 'Formato de e-mail inválido.' });
+        }
     }
 
     const query = 'UPDATE usuarios SET nome_usuario = COALESCE(?, nome_usuario), email = COALESCE(?, email) WHERE nome_usuario = ? OR email = ?';

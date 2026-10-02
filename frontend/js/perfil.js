@@ -134,11 +134,26 @@ export function inicializarPerfil() {
         { id: "input-novo-email", label: "E-mail", valor: estado.usuarioAtualEmail || "", placeholder: "Digite o novo e-mail" }
       ],
       async (valores, fecharModal) => {
-        const novoNome = valores["input-novo-nome"];
-        const novoEmail = valores["input-novo-email"];
+        const novoNome = valores["input-novo-nome"].trim();
+        const novoEmail = valores["input-novo-email"].trim();
 
-        if (!novoNome && !novoEmail) {
-          alert("Preencha pelo menos um dos campos.");
+        // Validação estrita: impede campos vazios
+        if (!novoNome || !novoEmail) {
+          alert("O nome de usuário e o e-mail não podem ficar vazios.");
+          return;
+        }
+
+        // Validação estrita do nome: apenas letras e espaços
+        const regexNome = /^[a-zA-ZÀ-ÿ\s]+$/;
+        if (!regexNome.test(novoNome)) {
+          alert("O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou caracteres especiais).");
+          return;
+        }
+
+        // Validação estrita da estrutura do e-mail
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!regexEmail.test(novoEmail)) {
+          alert("Por favor, insira um endereço de e-mail válido (ex: exemplo@dominio.com).");
           return;
         }
 
@@ -153,16 +168,14 @@ export function inicializarPerfil() {
 
           if (resposta.ok) {
             alert("Sucesso: " + dados.mensagem);
-            if (novoNome) {
-              estado.usuarioAtual = novoNome;
-              const textoBoasVindas = document.getElementById("boas-vindas-usuario");
-              if (textoBoasVindas) {
-                textoBoasVindas.textContent = `OLÁ, ${estado.usuarioAtual.toUpperCase()}`;
-              }
+            estado.usuarioAtual = novoNome;
+            estado.usuarioAtualEmail = novoEmail;
+            
+            const textoBoasVindas = document.getElementById("boas-vindas-usuario");
+            if (textoBoasVindas) {
+              textoBoasVindas.textContent = `OLÁ, ${estado.usuarioAtual.toUpperCase()}`;
             }
-            if (novoEmail) {
-              estado.usuarioAtualEmail = novoEmail;
-            }
+            
             renderizarPerfil();
             fecharModal();
           } else {

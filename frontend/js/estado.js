@@ -1,9 +1,9 @@
 // estado.js
 // Estado da aplicação, compartilhado entre os módulos.
-// Tudo em memória (não há backend/localStorage neste projeto).
 
 export const estado = {
   usuarioAtual: "ALUNO(A)",
+  usuarioAtualEmail: "", // Adicionado para rastrear o e-mail corretamente
   bancoDeGrupos: {},
   bancoDeEventos: [],
   idGrupoEmEdicao: null,
