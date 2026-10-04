@@ -1,10 +1,10 @@
 // grupos.js
-// Lista de grupos (Início e Grupos), criação de grupo, busca e entrada
-// em grupos por código (público/privado).
+// Lista de grupos (Início e Grupos), criação de grupo, busca, entrada em grupos e exclusão.
 
 import { estado, coresCartao } from "./estado.js";
 import { abrirSalaDeAula } from "./sala-de-aula.js";
 import { renderizarHorariosInicio } from "./inicio.js";
+import { mostrarView } from "./navegacao.js";
 
 const botaoCriarGrupo = document.querySelector(".btn-criar");
 const modalFundo = document.getElementById("modal-criar-grupo");
@@ -20,8 +20,73 @@ if (botaoFecharModal) {
   botaoFecharModal.addEventListener("click", () => modalFundo.classList.add("escondido"));
 }
 
+/** Função para carregar os grupos do servidor ao iniciar */
+export async function carregarGruposDoServidor() {
+  try {
+    const resposta = await fetch("http://localhost:3000/api/grupos");
+    if (resposta.ok) {
+      const gruposDoBanco = await resposta.json();
+      estado.bancoDeGrupos = {};
+
+      gruposDoBanco.forEach((g) => {
+        const chave = g.id_unico || `grupo-${g.id}`;
+        estado.bancoDeGrupos[chave] = {
+          id: chave,
+          idBanco: g.id,
+          id_unico: g.id_unico, // Adicionado para garantir o envio do id_unico correto
+          nome: g.nome,
+          materia: g.materia,
+          privacidade: g.privacidade,
+          codigo: g.codigo,
+          criador: g.criador,
+          horarios: [],
+          tarefas: [],
+          mensagens: [],
+          membrosConvidados: [],
+        };
+      });
+
+      reconstruirGradesDeGrupos();
+    }
+  } catch (erro) {
+    console.error("Erro ao carregar grupos do servidor:", erro);
+  }
+}
+
+/** Função para excluir um grupo no servidor e atualizar a interface */
+export async function excluirGrupoDoServidor(idUnicoOuChave) {
+  const dadosGrupo = estado.bancoDeGrupos[idUnicoOuChave];
+  if (!dadosGrupo) return;
+
+  if (!confirm(`Tem certeza de que deseja excluir o grupo "${dadosGrupo.nome}"?`)) {
+    return;
+  }
+
+  try {
+    // Garante um identificador válido caso id_unico seja nulo
+    const identificadorParaExcluir = dadosGrupo.id_unico || dadosGrupo.idBanco || dadosGrupo.id || idUnicoOuChave;
+
+    const resposta = await fetch(`http://localhost:3000/api/grupos/${identificadorParaExcluir}`, {
+      method: "DELETE",
+    });
+
+    if (resposta.ok) {
+      delete estado.bancoDeGrupos[idUnicoOuChave];
+      reconstruirGradesDeGrupos();
+      alert("Grupo excluído com sucesso!");
+      mostrarView("inicio", "inicio");
+    } else {
+      const dadosErro = await resposta.json();
+      alert("Erro ao excluir grupo: " + (dadosErro.erro || "Erro desconhecido"));
+    }
+  } catch (erro) {
+    console.error("Erro de conexão ao excluir grupo:", erro);
+    alert("Não foi possível ligar ao servidor para excluir o grupo.");
+  }
+}
+
 if (formularioCriarGrupo) {
-  formularioCriarGrupo.addEventListener("submit", (e) => {
+  formularioCriarGrupo.addEventListener("submit", async (e) => {
     e.preventDefault();
     const nomeGrupo = formularioCriarGrupo.querySelectorAll("input")[0].value.trim();
     const materiaGrupo = formularioCriarGrupo.querySelectorAll("input")[1].value.trim();
@@ -31,25 +96,40 @@ if (formularioCriarGrupo) {
 
     const idUnico = `grupo-${Date.now()}`;
     const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
+    const criadorAtual = estado.usuarioAtual || "Usuário";
 
-    estado.bancoDeGrupos[idUnico] = {
-      id: idUnico,
+    const novoGrupoDados = {
+      id_unico: idUnico,
       nome: nomeGrupo,
       materia: materiaGrupo,
       privacidade: textoPrivacidade,
       codigo: codigoAleatorio,
-      horarios: [],
-      tarefas: [],
-      mensagens: [],
-      membrosConvidados: [],
+      criador: criadorAtual,
     };
 
-    reconstruirGradesDeGrupos();
-    modalFundo.classList.add("escondido");
-    formularioCriarGrupo.reset();
+    try {
+      const resposta = await fetch("http://localhost:3000/api/grupos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(novoGrupoDados),
+      });
 
-    const campoBusca = document.querySelector(".barra-busca");
-    if (campoBusca) campoBusca.value = "";
+      if (resposta.ok) {
+        await carregarGruposDoServidor();
+
+        modalFundo.classList.add("escondido");
+        formularioCriarGrupo.reset();
+
+        const campoBusca = document.querySelector(".barra-busca");
+        if (campoBusca) campoBusca.value = "";
+      } else {
+        const dadosErro = await resposta.json();
+        alert("Erro ao criar grupo: " + dadosErro.erro);
+      }
+    } catch (erro) {
+      console.error("Erro de conexão:", erro);
+      alert("Não foi possível ligar ao servidor para criar o grupo.");
+    }
   });
 }
 
@@ -75,7 +155,7 @@ export function reconstruirGradesDeGrupos() {
     const dadosGrupo = estado.bancoDeGrupos[chave];
     const corCartaoAtual = coresCartao[idx % coresCartao.length];
     const cartaoHTML = `
-                <div class="cartao-grupo-personalizado" id="${dadosGrupo.id}" style="background-color: ${corCartaoAtual};">
+                <div class="cartao-grupo-personalizado" id="${dadosGrupo.id}" style="background-color: ${corCartaoAtual}; position: relative;">
                     <div class="circulo-icone-grupo">📖</div>
                     <h4>${dadosGrupo.nome}</h4>
                     <p>${dadosGrupo.materia}</p>

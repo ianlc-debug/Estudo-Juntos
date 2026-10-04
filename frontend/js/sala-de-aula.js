@@ -4,7 +4,7 @@
 
 import { estado } from "./estado.js";
 import { mostrarView } from "./navegacao.js";
-import { reconstruirGradesDeGrupos } from "./grupos.js";
+import { excluirGrupoDoServidor } from "./grupos.js";
 import { renderizarTarefasGlobais, renderizarHorariosInicio } from "./inicio.js";
 
 const nomeGrupoSala = document.getElementById("nome-grupo-sala");
@@ -83,15 +83,9 @@ if (botaoSimularUpload) {
 }
 
 if (botaoExcluirGrupo) {
-  botaoExcluirGrupo.addEventListener("click", () => {
-    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
-    if (confirm(`Tem certeza que deseja excluir o grupo "${dadosGrupo.nome}"?`)) {
-      delete estado.bancoDeGrupos[estado.idGrupoEmEdicao];
-      estado.idGrupoEmEdicao = null;
-      reconstruirGradesDeGrupos();
-      renderizarTarefasGlobais();
-      mostrarView("grupos");
-    }
+  botaoExcluirGrupo.addEventListener("click", async () => {
+    // Usa a função centralizada que apaga no servidor MySQL e limpa a interface
+    await excluirGrupoDoServidor(estado.idGrupoEmEdicao);
   });
 }
 

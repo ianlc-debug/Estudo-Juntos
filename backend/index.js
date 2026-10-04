@@ -180,7 +180,6 @@ app.put('/api/usuarios/:identificador', async (req, res) => {
         return res.status(400).json({ erro: 'Forneça ao menos um campo para atualizar.' });
     }
 
-    // Se o novo nome foi enviado, valida se ele cumpre as regras (apenas letras e espaços)
     if (novoNome) {
         const regexUsuario = /^[a-zA-ZÀ-ÿ\s]+$/;
         if (!regexUsuario.test(novoNome)) {
@@ -190,7 +189,6 @@ app.put('/api/usuarios/:identificador', async (req, res) => {
         }
     }
 
-    // Se o novo e-mail foi enviado, valida a estrutura
     if (novoEmail) {
         const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!regexEmail.test(novoEmail)) {
@@ -232,7 +230,6 @@ app.put('/api/usuarios/senha/:identificador', async (req, res) => {
         return res.status(400).json({ erro: 'A nova senha deve ter pelo menos 6 caracteres.' });
     }
 
-    // Procura o utilizador para validar a senha atual
     const buscaQuery = 'SELECT * FROM usuarios WHERE nome_usuario = ? OR email = ?';
     db.query(buscaQuery, [identificador, identificador], async (err, resultados) => {
         if (err || resultados.length === 0) {
@@ -246,7 +243,6 @@ app.put('/api/usuarios/senha/:identificador', async (req, res) => {
             return res.status(401).json({ erro: 'Senha atual incorreta.' });
         }
 
-        // Criptografa a nova senha e atualiza na base de dados
         const saltRounds = 10;
         const senhaCriptografada = await bcrypt.hash(novaSenha, saltRounds);
 
@@ -257,6 +253,60 @@ app.put('/api/usuarios/senha/:identificador', async (req, res) => {
             }
             return res.status(200).json({ mensagem: 'Senha alterada com sucesso!' });
         });
+    });
+});
+
+// Rota para Criar um Novo Grupo de Estudo
+app.post('/api/grupos', (req, res) => {
+    const { id_unico, nome, materia, privacidade, codigo, criador } = req.body;
+
+    if (!nome || !materia || !criador) {
+        return res.status(400).json({ erro: 'Preencha todos os campos obrigatórios do grupo.' });
+    }
+
+    const query = 'INSERT INTO grupos (id_unico, nome, materia, privacidade, codigo, criador) VALUES (?, ?, ?, ?, ?, ?)';
+
+    db.query(query, [id_unico, nome, materia, privacidade, codigo, criador], (err, resultado) => {
+        if (err) {
+            console.error("Erro ao criar grupo:", err);
+            return res.status(500).json({ erro: 'Erro interno ao salvar o grupo.' });
+        }
+
+        return res.status(201).json({ mensagem: 'Grupo criado com sucesso!' });
+    });
+});
+
+// Rota para Listar Todos os Grupos Guardados
+app.get('/api/grupos', (req, res) => {
+    const query = 'SELECT * FROM grupos ORDER BY id DESC';
+
+    db.query(query, (err, resultados) => {
+        if (err) {
+            console.error("Erro ao buscar grupos:", err);
+            return res.status(500).json({ erro: 'Erro interno ao buscar os grupos.' });
+        }
+
+        return res.status(200).json(resultados);
+    });
+});
+
+// Rota para Excluir um Grupo de Estudo (Baseada no id_unico)
+app.delete('/api/grupos/:identificador', (req, res) => {
+    const { identificador } = req.params;
+
+    const query = 'DELETE FROM grupos WHERE id_unico = ? OR id = ?';
+
+    db.query(query, [identificador, identificador], (err, resultado) => {
+        if (err) {
+            console.error("Erro ao excluir grupo:", err);
+            return res.status(500).json({ erro: 'Erro interno ao excluir o grupo.' });
+        }
+
+        if (resultado.affectedRows > 0) {
+            return res.status(200).json({ mensagem: 'Grupo excluído com sucesso!' });
+        } else {
+            return res.status(404).json({ erro: 'Grupo não encontrado na base de dados.' });
+        }
     });
 });
 

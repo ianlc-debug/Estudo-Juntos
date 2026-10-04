@@ -3,6 +3,7 @@
 
 import { estado } from "./estado.js";
 import { mostrarView } from "./navegacao.js";
+import { carregarGruposDoServidor } from "./grupos.js";
 
 const telaLogin = document.getElementById("tela-login");
 const telaCadastro = document.getElementById("tela-cadastro");
@@ -155,6 +156,9 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
       if (resposta.ok) {
         estado.usuarioAtual = dados.usuario.nome_usuario;
         estado.usuarioAtualEmail = dados.usuario.email;
+
+        // Carrega os grupos do MySQL assim que o login é efetuado com sucesso
+        await carregarGruposDoServidor();
 
         if (textoBoasVindas) {
           textoBoasVindas.textContent = `OLÁ, ${estado.usuarioAtual.toUpperCase()}`;
