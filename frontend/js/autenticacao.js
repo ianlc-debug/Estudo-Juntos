@@ -156,6 +156,8 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
       if (resposta.ok) {
         estado.usuarioAtual = dados.usuario.nome_usuario;
         estado.usuarioAtualEmail = dados.usuario.email;
+        estado.usuarioAtualId = dados.usuario.id;
+        estado.tokenSessao = dados.token;
 
         // Carrega os grupos do MySQL assim que o login é efetuado com sucesso
         await carregarGruposDoServidor();
@@ -221,6 +223,9 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
 
     estado.usuarioAtual = "ALUNO(A)";
     estado.usuarioAtualEmail = "";
+    estado.usuarioAtualId = null;
+    estado.tokenSessao = null;
+    estado.bancoDeGrupos = {};
 
     localStorage.clear();
     sessionStorage.clear();

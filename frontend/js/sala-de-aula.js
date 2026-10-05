@@ -1,63 +1,86 @@
 // sala-de-aula.js
-// Tudo o que acontece dentro de um grupo já aberto: cabeçalho, membros,
-// convites, horários fixos, mural de atividades e mural de recados.
+// Lógica da Sala de Aula do Grupo (membros, horários, atividades, recados e permissões)
 
 import { estado } from "./estado.js";
-import { mostrarView } from "./navegacao.js";
 import { excluirGrupoDoServidor } from "./grupos.js";
-import { renderizarTarefasGlobais, renderizarHorariosInicio } from "./inicio.js";
+import { mostrarView } from "./navegacao.js"; // <--- Importação restaurada para permitir mudar de tela
 
-const nomeGrupoSala = document.getElementById("nome-grupo-sala");
-const materiaGrupoSala = document.getElementById("materia-grupo-sala");
-const tipoGrupoSala = document.getElementById("tipo-grupo-sala");
+// Elementos do Cabeçalho e Informações Gerais da Sala
+const nomeGrupoSala = document.getElementById("sala-nome-grupo");
+const materiaGrupoSala = document.getElementById("sala-materia-grupo");
+const tipoGrupoSala = document.getElementById("sala-tipo-grupo");
 const codigoGrupoSala = document.getElementById("codigo-grupo-sala");
-const bannerHorariosSala = document.getElementById("banner-horarios-sala");
-const contadorMembrosSala = document.getElementById("contador-membros-sala");
-const botaoExcluirGrupo = document.getElementById("btn-excluir-grupo");
+const contadorMembrosSala = document.getElementById("sala-contador-membros");
 
+// Secções e Painéis da Interface
+const widgetsPrincipaisSala = document.getElementById("sala-widgets-principais");
+const secaoMembrosSala = document.getElementById("sala-secao-membros");
+const secaoConviteSala = document.getElementById("sala-secao-convite");
+const listaMembrosSala = document.getElementById("sala-lista-membros");
+
+// Botões de Navegação e Ação
+const botaoExcluirGrupo = document.getElementById("btn-excluir-grupo");
 const botaoVerMembros = document.getElementById("btn-ver-membros");
+const botaoConvidarMembros = document.getElementById("btn-convidar-membros");
 const botaoFecharMembros = document.getElementById("btn-fechar-membros");
-const botaoAbrirConviteMembro = document.getElementById("btn-abrir-convite-membro");
 const botaoFecharConvite = document.getElementById("btn-fechar-convite");
 
-const widgetsPrincipaisSala = document.getElementById("widgets-principais-sala");
-const secaoMembrosSala = document.getElementById("secao-membros-sala");
-const listaMembrosSala = document.getElementById("lista-membros-sala");
-const secaoConviteSala = document.getElementById("secao-convite-sala");
-const formularioConviteGrupo = document.getElementById("formulario-convite-grupo");
-
-const selectDiaSala = document.getElementById("select-dia-sala");
-const selectHorarioSala = document.getElementById("select-horario-sala");
-const listaHorariosSala = document.getElementById("lista-horarios-sala");
-const botaoAdicionarHorario = document.getElementById("btn-adicionar-horario");
-
-const campoTarefaSala = document.getElementById("campo-tarefa-sala");
-const botaoPublicarTarefa = document.getElementById("btn-publicar-tarefa");
-const feedTarefasSala = document.getElementById("feed-tarefas-sala");
-const botaoSimularUpload = document.getElementById("btn-simular-upload");
-
+// Campos de Recados (Mensagens)
 const campoRecadoSala = document.getElementById("campo-recado-sala");
-const botaoPublicarRecado = document.getElementById("btn-publicar-recado");
+const botaoEnviarRecado = document.getElementById("btn-enviar-recado");
 const feedRecadosSala = document.getElementById("feed-recados-sala");
 
-/** Abre a sala de aula de um grupo específico. */
+// Campos de Atividades (Tarefas)
+const campoTarefaSala = document.getElementById("campo-tarefa-sala");
+const campoDataTarefaSala = document.getElementById("campo-data-tarefa-sala");
+const botaoPublicarTarefa = document.getElementById("btn-publicar-tarefa");
+const listaTarefasSala = document.getElementById("lista-tarefas-sala");
+
+// Formulário de Horários
+const formularioHorarioSala = document.getElementById("formulario-horario-sala");
+const diaSemanaSala = document.getElementById("dia-semana-sala");
+const horaInicioSala = document.getElementById("hora-inicio-sala");
+const horaFimSala = document.getElementById("hora-fim-sala");
+const descricaoHorarioSala = document.getElementById("descricao-horario-sala");
+const gradeHorariosSala = document.getElementById("grade-horarios-sala");
+
+/**
+ * Abre a Sala de Aula do grupo selecionado e navega para a vista correspondente
+ * @param {string} idGrupo - Chave do grupo em estado.bancoDeGrupos
+ */
 export function abrirSalaDeAula(idGrupo) {
   estado.idGrupoEmEdicao = idGrupo;
   const dadosGrupo = estado.bancoDeGrupos[idGrupo];
 
-  mostrarView("salaDeAula", null);
+  if (!dadosGrupo) return;
 
-  widgetsPrincipaisSala.classList.remove("escondido");
-  secaoMembrosSala.classList.add("escondido");
-  secaoConviteSala.classList.add("escondido");
+  // Altera a vista principal para a sala de aula
+  mostrarView("salaDeAula", "salaDeAula");
 
-  nomeGrupoSala.textContent = dadosGrupo.nome;
-  materiaGrupoSala.textContent = dadosGrupo.materia;
-  tipoGrupoSala.textContent = dadosGrupo.privacidade;
-  codigoGrupoSala.textContent = dadosGrupo.codigo;
+  // Garante a exibição do painel principal da sala e esconde os secundários
+  if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.remove("escondido");
+  if (secaoMembrosSala) secaoMembrosSala.classList.add("escondido");
+  if (secaoConviteSala) secaoConviteSala.classList.add("escondido");
 
-  campoRecadoSala.value = "";
-  campoTarefaSala.value = "";
+  // Preenche dados do grupo na interface
+  if (nomeGrupoSala) nomeGrupoSala.textContent = dadosGrupo.nome;
+  if (materiaGrupoSala) materiaGrupoSala.textContent = dadosGrupo.materia;
+  if (tipoGrupoSala) tipoGrupoSala.textContent = dadosGrupo.privacidade;
+  if (codigoGrupoSala) codigoGrupoSala.textContent = dadosGrupo.codigo;
+
+  // Exibe o botão de exclusão apenas para quem criou o grupo
+  const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
+  const criadorGrupo = (dadosGrupo.criador || "").trim().toLowerCase();
+  const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
+
+  if (botaoExcluirGrupo) {
+    botaoExcluirGrupo.style.display = ehCriador ? "inline-block" : "none";
+  }
+
+  // Limpa campos de entrada
+  if (campoRecadoSala) campoRecadoSala.value = "";
+  if (campoTarefaSala) campoTarefaSala.value = "";
+  if (campoDataTarefaSala) campoDataTarefaSala.value = "";
   if (botaoPublicarTarefa) {
     botaoPublicarTarefa.removeAttribute("data-indice-edicao");
     botaoPublicarTarefa.textContent = "Cadastrar Atividade";
@@ -69,275 +92,253 @@ export function abrirSalaDeAula(idGrupo) {
   renderizarRecados();
 }
 
+/** Atualiza a contagem total de membros (Criador + Convidados) */
 export function atualizarContadorMembros() {
   const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
-  const totalMembros = 1 + dadosGrupo.membrosConvidados.length;
-  contadorMembrosSala.textContent = totalMembros;
+  if (!dadosGrupo || !contadorMembrosSala) return;
+
+  const total = 1 + (dadosGrupo.membrosConvidados ? dadosGrupo.membrosConvidados.length : 0);
+  contadorMembrosSala.textContent = `${total} membro${total > 1 ? "s" : ""}`;
 }
 
-if (botaoSimularUpload) {
-  botaoSimularUpload.addEventListener("click", () => {
-    botaoSimularUpload.style.opacity = "0.7";
-    setTimeout(() => (botaoSimularUpload.style.opacity = "1"), 150);
+/** Renderiza os horários cadastrados no grupo */
+export function renderizarHorarios() {
+  if (!gradeHorariosSala) return;
+  gradeHorariosSala.innerHTML = "";
+
+  const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+  if (!dadosGrupo || !dadosGrupo.horarios) return;
+
+  if (dadosGrupo.horarios.length === 0) {
+    gradeHorariosSala.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">Nenhum horário cadastrado.</p>`;
+    return;
+  }
+
+  dadosGrupo.horarios.forEach((item, index) => {
+    const el = document.createElement("div");
+    el.className = "item-horario-sala";
+    el.style.cssText =
+      "background: #f8fafc; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0;";
+    el.innerHTML = `
+      <div>
+        <strong style="color: #334155; font-size: 0.85rem;">${item.dia}: ${item.inicio} - ${item.fim}</strong>
+        <p style="margin: 0; color: #64748b; font-size: 0.8rem;">${item.descricao || "Sem descrição"}</p>
+      </div>
+      <button class="btn-remover-horario" data-index="${index}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold;">✕</button>
+    `;
+    gradeHorariosSala.appendChild(el);
+  });
+
+  gradeHorariosSala.querySelectorAll(".btn-remover-horario").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const index = e.target.getAttribute("data-index");
+      dadosGrupo.horarios.splice(index, 1);
+      renderizarHorarios();
+    });
   });
 }
+
+/** Renderiza as atividades do grupo */
+export function renderizarTarefas() {
+  if (!listaTarefasSala) return;
+  listaTarefasSala.innerHTML = "";
+
+  const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+  if (!dadosGrupo || !dadosGrupo.tarefas) return;
+
+  if (dadosGrupo.tarefas.length === 0) {
+    listaTarefasSala.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem;">Nenhuma atividade cadastrada.</p>`;
+    return;
+  }
+
+  dadosGrupo.tarefas.forEach((tarefa, index) => {
+    const el = document.createElement("div");
+    el.className = "item-tarefa-sala";
+    el.style.cssText =
+      "background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0;";
+    el.innerHTML = `
+      <div>
+        <strong style="color: #1e293b; font-size: 0.9rem;">${tarefa.titulo}</strong>
+        ${tarefa.data ? `<p style="margin: 2px 0 0; color: #64748b; font-size: 0.78rem;">Data: ${tarefa.data}</p>` : ""}
+      </div>
+      <button class="btn-remover-tarefa" data-index="${index}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold;">✕</button>
+    `;
+    listaTarefasSala.appendChild(el);
+  });
+
+  listaTarefasSala.querySelectorAll(".btn-remover-tarefa").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const index = e.target.getAttribute("data-index");
+      dadosGrupo.tarefas.splice(index, 1);
+      renderizarTarefas();
+    });
+  });
+}
+
+/** Renderiza o feed de mensagens/recados */
+export function renderizarRecados() {
+  if (!feedRecadosSala) return;
+  feedRecadosSala.innerHTML = "";
+
+  const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+  if (!dadosGrupo || !dadosGrupo.mensagens) return;
+
+  if (dadosGrupo.mensagens.length === 0) {
+    feedRecadosSala.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem; text-align: center;">Nenhum recado publicado ainda.</p>`;
+    return;
+  }
+
+  dadosGrupo.mensagens.forEach((msg) => {
+    const el = document.createElement("div");
+    el.className = "item-recado-sala";
+    el.style.cssText =
+      "background: #ffffff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);";
+    el.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <strong style="color: #3b82f6; font-size: 0.82rem;">${msg.autor || "Anônimo"}</strong>
+        <small style="color: #94a3b8; font-size: 0.72rem;">${msg.horario || ""}</small>
+      </div>
+      <p style="margin: 0; color: #334155; font-size: 0.88rem;">${msg.texto}</p>
+    `;
+    feedRecadosSala.appendChild(el);
+  });
+}
+
+// --- Event Listeners --------------------------------------------------------
 
 if (botaoExcluirGrupo) {
-  botaoExcluirGrupo.addEventListener("click", async () => {
-    // Usa a função centralizada que apaga no servidor MySQL e limpa a interface
-    await excluirGrupoDoServidor(estado.idGrupoEmEdicao);
+  botaoExcluirGrupo.addEventListener("click", () => {
+    if (estado.idGrupoEmEdicao) {
+      excluirGrupoDoServidor(estado.idGrupoEmEdicao);
+    }
   });
 }
-
-// --- Membros e convites ---------------------------------------------------
 
 if (botaoVerMembros) {
   botaoVerMembros.addEventListener("click", () => {
-    widgetsPrincipaisSala.classList.add("escondido");
-    secaoMembrosSala.classList.remove("escondido");
+    if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.add("escondido");
+    if (secaoMembrosSala) secaoMembrosSala.classList.remove("escondido");
+    if (secaoConviteSala) secaoConviteSala.classList.add("escondido");
 
     const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    if (!dadosGrupo) return;
+
+    const nomeCriador = dadosGrupo.criador || "Administrador";
+    const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
+    const criadorGrupo = nomeCriador.trim().toLowerCase();
+    const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
 
     let listaHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
-                        ${estado.usuarioAtual.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <strong style="color: #1e293b; font-size: 0.95rem;">${estado.usuarioAtual.toUpperCase()}</strong>
-                        <span style="font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">Você (Administrador)</span>
-                    </div>
-                </div>
-            `;
+      <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+        <div style="width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
+          ${nomeCriador.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <strong style="color: #1e293b; font-size: 0.95rem;">${nomeCriador.toUpperCase()}</strong>
+          <span style="font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">
+            ${ehCriador ? "Você (Administrador)" : "Administrador"}
+          </span>
+        </div>
+      </div>
+    `;
 
-    dadosGrupo.membrosConvidados.forEach((membro) => {
-      listaHTML += `
-                    <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <div style="width: 36px; height: 36px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
-                            ${membro.nome.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <strong style="color: #1e293b; font-size: 0.95rem;">${membro.nome.toUpperCase()}</strong>
-                            <span style="font-size: 0.75rem; color: #64748b; margin-left: 8px;">(${membro.email})</span>
-                            <span style="font-size: 0.75rem; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">Convidado</span>
-                        </div>
-                    </div>
-                `;
-    });
+    if (dadosGrupo.membrosConvidados && dadosGrupo.membrosConvidados.length > 0) {
+      dadosGrupo.membrosConvidados.forEach((membro) => {
+        listaHTML += `
+          <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+            <div style="width: 36px; height: 36px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
+              ${membro.nome ? membro.nome.charAt(0).toUpperCase() : "M"}
+            </div>
+            <div>
+              <strong style="color: #1e293b; font-size: 0.95rem;">${(membro.nome || "Membro").toUpperCase()}</strong>
+              ${membro.email ? `<span style="font-size: 0.75rem; color: #64748b; margin-left: 8px;">(${membro.email})</span>` : ""}
+              <span style="font-size: 0.75rem; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">Convidado</span>
+            </div>
+          </div>
+        `;
+      });
+    }
 
-    listaMembrosSala.innerHTML = listaHTML;
+    if (listaMembrosSala) listaMembrosSala.innerHTML = listaHTML;
   });
 }
 
 if (botaoFecharMembros) {
   botaoFecharMembros.addEventListener("click", () => {
-    secaoMembrosSala.classList.add("escondido");
-    widgetsPrincipaisSala.classList.remove("escondido");
+    if (secaoMembrosSala) secaoMembrosSala.classList.add("escondido");
+    if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.remove("escondido");
   });
 }
 
-if (botaoAbrirConviteMembro) {
-  botaoAbrirConviteMembro.addEventListener("click", () => {
-    secaoConviteSala.classList.remove("escondido");
-    document.getElementById("campo-nome-convite").focus();
+if (botaoConvidarMembros) {
+  botaoConvidarMembros.addEventListener("click", () => {
+    if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.add("escondido");
+    if (secaoMembrosSala) secaoMembrosSala.classList.add("escondido");
+    if (secaoConviteSala) secaoConviteSala.classList.remove("escondido");
   });
 }
 
 if (botaoFecharConvite) {
   botaoFecharConvite.addEventListener("click", () => {
-    secaoConviteSala.classList.add("escondido");
-    formularioConviteGrupo.reset();
+    if (secaoConviteSala) secaoConviteSala.classList.add("escondido");
+    if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.remove("escondido");
   });
 }
 
-if (formularioConviteGrupo) {
-  formularioConviteGrupo.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nomeInformado = document.getElementById("campo-nome-convite").value.trim();
-    const emailInformado = document.getElementById("campo-email-convite").value.trim();
+if (botaoEnviarRecado && campoRecadoSala) {
+  botaoEnviarRecado.addEventListener("click", () => {
+    const texto = campoRecadoSala.value.trim();
+    if (!texto) return;
 
-    const grupoAtual = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
-    grupoAtual.membrosConvidados.push({ nome: nomeInformado, email: emailInformado });
+    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    if (!dadosGrupo) return;
 
-    formularioConviteGrupo.reset();
-    secaoConviteSala.classList.add("escondido");
-    atualizarContadorMembros();
+    const agora = new Date();
+    const horaFormatada = `${agora.getHours().toString().padStart(2, "0")}:${agora.getMinutes().toString().padStart(2, "0")}`;
 
-    if (!secaoMembrosSala.classList.contains("escondido")) {
-      botaoVerMembros.click();
-    }
-  });
-}
-
-// --- Horários fixos ---------------------------------------------------
-
-if (botaoAdicionarHorario) {
-  botaoAdicionarHorario.addEventListener("click", () => {
-    const dia = selectDiaSala.value;
-    const valorHorario = selectHorarioSala.value;
-    if (!dia || !valorHorario) return alert("Selecione um dia e um horário válidos.");
-
-    const partes = valorHorario.split("-");
-    const horarioFormatado = `${partes[0]}:00 - ${partes[1]}:00`;
-
-    const registro = `${dia} às ${horarioFormatado}`;
-    const listaAtual = estado.bancoDeGrupos[estado.idGrupoEmEdicao].horarios;
-
-    if (listaAtual.includes(registro)) return alert("Esse horário já está vinculado ao grupo!");
-
-    listaAtual.push(registro);
-    renderizarHorarios();
-  });
-}
-
-export function renderizarHorarios() {
-  listaHorariosSala.innerHTML = "";
-  bannerHorariosSala.innerHTML = "";
-  const lista = estado.bancoDeGrupos[estado.idGrupoEmEdicao].horarios;
-
-  if (lista.length === 0) {
-    bannerHorariosSala.innerHTML = `<span style="opacity:0.75; font-style: italic;">Nenhum horário definido</span>`;
-  }
-
-  lista.forEach((item, indice) => {
-    const itemBanner = document.createElement("p");
-    itemBanner.innerHTML = `<i class="fa-regular fa-calendar-check" style="margin-right: 6px;"></i> ${item}`;
-    bannerHorariosSala.appendChild(itemBanner);
-
-    const chip = document.createElement("div");
-    chip.className = "chip-horario";
-    chip.innerHTML = `${item} <button class="btn-remover-chip">&times;</button>`;
-    chip.querySelector(".btn-remover-chip").addEventListener("click", () => {
-      lista.splice(indice, 1);
-      renderizarHorarios();
+    dadosGrupo.mensagens.push({
+      autor: estado.usuarioAtual || "Usuário",
+      texto: texto,
+      horario: horaFormatada,
     });
-    listaHorariosSala.appendChild(chip);
-  });
-
-  renderizarHorariosInicio();
-}
-
-// --- Mural de atividades (tarefas) -----------------------------------------
-
-if (botaoPublicarTarefa) {
-  botaoPublicarTarefa.addEventListener("click", () => {
-    const textoTarefa = campoTarefaSala.value.trim();
-    if (!textoTarefa) return;
-
-    const arrayAlvo = estado.bancoDeGrupos[estado.idGrupoEmEdicao].tarefas;
-    const indiceEmEdicao = botaoPublicarTarefa.getAttribute("data-indice-edicao");
-
-    if (indiceEmEdicao !== null) {
-      arrayAlvo[parseInt(indiceEmEdicao)].texto = textoTarefa;
-      botaoPublicarTarefa.removeAttribute("data-indice-edicao");
-      botaoPublicarTarefa.textContent = "Cadastrar Atividade";
-    } else {
-      arrayAlvo.push({ autor: estado.usuarioAtual, texto: textoTarefa, concluida: false });
-    }
-
-    campoTarefaSala.value = "";
-    renderizarTarefas();
-    renderizarTarefasGlobais();
-  });
-}
-
-export function renderizarTarefas() {
-  feedTarefasSala.innerHTML = "";
-  const lista = estado.bancoDeGrupos[estado.idGrupoEmEdicao].tarefas;
-  lista.forEach((tarefa, idx) => {
-    const cartao = document.createElement("div");
-    cartao.className = "cartao-post-mural";
-
-    const classeEstiloTexto = tarefa.concluida ? "texto-tarefa-concluida" : "";
-    const marcado = tarefa.concluida ? "checked" : "";
-
-    cartao.innerHTML = `
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <input type="checkbox" class="checkbox-tarefa" ${marcado} style="transform: scale(1.2); margin-top: 4px; cursor: pointer;">
-                    <div style="flex: 1;">
-                        <div class="meta-post-mural">📍 Cadastrado por: <strong>${tarefa.autor.toUpperCase()}</strong></div>
-                        <p class="${classeEstiloTexto}" style="margin: 0; font-weight: 500;">${tarefa.texto}</p>
-                        <div class="acoes-cartao-mural">
-                            <button class="btn-editar-post-mural">✏️ Editar</button>
-                            <button class="btn-excluir-post-mural"><i class="fa-solid fa-trash-can"></i> Excluir</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-    cartao.querySelector(".checkbox-tarefa").addEventListener("change", (e) => {
-      tarefa.concluida = e.target.checked;
-      renderizarTarefas();
-      renderizarTarefasGlobais();
-    });
-
-    cartao.querySelector(".btn-editar-post-mural").addEventListener("click", () => {
-      campoTarefaSala.value = tarefa.texto;
-      campoTarefaSala.focus();
-      botaoPublicarTarefa.setAttribute("data-indice-edicao", idx);
-      botaoPublicarTarefa.textContent = "Salvar Alterações";
-    });
-
-    cartao.querySelector(".btn-excluir-post-mural").addEventListener("click", () => {
-      lista.splice(idx, 1);
-      renderizarTarefas();
-      renderizarTarefasGlobais();
-    });
-
-    feedTarefasSala.appendChild(cartao);
-  });
-}
-
-// --- Mural de recados (mensagens do grupo) ---------------------------------
-
-if (botaoPublicarRecado) {
-  botaoPublicarRecado.addEventListener("click", () => {
-    const textoRecado = campoRecadoSala.value.trim();
-    if (!textoRecado) return;
-
-    const arrayAlvo = estado.bancoDeGrupos[estado.idGrupoEmEdicao].mensagens;
-    const indiceEmEdicao = botaoPublicarRecado.getAttribute("data-indice-edicao");
-
-    if (indiceEmEdicao !== null) {
-      arrayAlvo[parseInt(indiceEmEdicao)].texto = textoRecado;
-      botaoPublicarRecado.removeAttribute("data-indice-edicao");
-      botaoPublicarRecado.textContent = "Publicar no Mural";
-    } else {
-      arrayAlvo.push({ autor: estado.usuarioAtual, texto: textoRecado });
-    }
 
     campoRecadoSala.value = "";
     renderizarRecados();
   });
 }
 
-export function renderizarRecados() {
-  feedRecadosSala.innerHTML = "";
-  const lista = estado.bancoDeGrupos[estado.idGrupoEmEdicao].mensagens;
-  lista.forEach((recado, idx) => {
-    const cartao = document.createElement("div");
-    cartao.className = "cartao-post-mural";
-    cartao.innerHTML = `
-                <div class="meta-post-mural">👤 Enviado por: <strong>${recado.autor.toUpperCase()}</strong></div>
-                <p>${recado.texto}</p>
-                <div class="acoes-cartao-mural">
-                    <button class="btn-editar-post-mural">✏️ Editar recado</button>
-                    <button class="btn-excluir-post-mural"><i class="fa-solid fa-trash-can"></i> Excluir</button>
-                </div>
-            `;
+if (botaoPublicarTarefa && campoTarefaSala) {
+  botaoPublicarTarefa.addEventListener("click", () => {
+    const titulo = campoTarefaSala.value.trim();
+    const data = campoDataTarefaSala ? campoDataTarefaSala.value : "";
+    if (!titulo) return;
 
-    cartao.querySelector(".btn-editar-post-mural").addEventListener("click", () => {
-      campoRecadoSala.value = recado.texto;
-      campoRecadoSala.focus();
-      botaoPublicarRecado.setAttribute("data-indice-edicao", idx);
-      botaoPublicarRecado.textContent = "Salvar Mudanças";
-    });
+    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    if (!dadosGrupo) return;
 
-    cartao.querySelector(".btn-excluir-post-mural").addEventListener("click", () => {
-      lista.splice(idx, 1);
-      renderizarRecados();
-    });
+    dadosGrupo.tarefas.push({ titulo, data });
+    campoTarefaSala.value = "";
+    if (campoDataTarefaSala) campoDataTarefaSala.value = "";
 
-    feedRecadosSala.appendChild(cartao);
+    renderizarTarefas();
+  });
+}
+
+if (formularioHorarioSala) {
+  formularioHorarioSala.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    if (!dadosGrupo) return;
+
+    const novoHorario = {
+      dia: diaSemanaSala ? diaSemanaSala.value : "Segunda-feira",
+      inicio: horaInicioSala ? horaInicioSala.value : "08:00",
+      fim: horaFimSala ? horaFimSala.value : "09:00",
+      descricao: descricaoHorarioSala ? descricaoHorarioSala.value.trim() : "",
+    };
+
+    dadosGrupo.horarios.push(novoHorario);
+    formularioHorarioSala.reset();
+    renderizarHorarios();
   });
 }

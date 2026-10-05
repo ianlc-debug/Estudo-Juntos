@@ -1,6 +1,5 @@
 # Estudo+Juntos
 
-```markdown
 # Estudo+Juntos - Back-end
 
 Repositório do back-end da aplicação **Estudo+Juntos**, desenvolvido em Node.js com Express e MySQL para a disciplina de Tecnologias Web 2.
@@ -116,3 +115,13 @@ node index.js
 }
 
 ```
+```
+
+# Configuração de grupos e banco de dados
+
+1. Configure `backend/.env` com as credenciais do MySQL e uma chave aleatória longa em `SESSION_SECRET` (veja `.env.example`).
+2. Em uma instalação nova, execute `backend/database/scheme.sql`.
+3. Em uma instalação que já possui a tabela `grupos`, execute uma vez `backend/database/migracao_grupos_criador.sql` antes de iniciar a API. A migração associa os grupos existentes aos usuários pelo nome do criador salvo.
+4. Inicie a API e faça login novamente. Todos os grupos aparecem somente para quem os criou, independentemente da opção de privacidade. Apenas o criador pode excluir seu grupo.
+
+O arquivo `.env` contém credenciais locais e não deve ser compartilhado.

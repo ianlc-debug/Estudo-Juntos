@@ -23,7 +23,9 @@ if (botaoFecharModal) {
 /** Função para carregar os grupos do servidor ao iniciar */
 export async function carregarGruposDoServidor() {
   try {
-    const resposta = await fetch("http://localhost:3000/api/grupos");
+    const resposta = await fetch("http://localhost:3000/api/grupos", {
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+    });
     if (resposta.ok) {
       const gruposDoBanco = await resposta.json();
       estado.bancoDeGrupos = {};
@@ -33,12 +35,12 @@ export async function carregarGruposDoServidor() {
         estado.bancoDeGrupos[chave] = {
           id: chave,
           idBanco: g.id,
-          id_unico: g.id_unico, // Adicionado para garantir o envio do id_unico correto
+          id_unico: g.id_unico,
           nome: g.nome,
           materia: g.materia,
           privacidade: g.privacidade,
-          codigo: g.codigo,
-          criador: g.criador,
+          codigo: g.codigo, // Garante a atribuição do código vindo do banco
+          criador: g.criador, // Garante a atribuição do criador vindo do banco
           horarios: [],
           tarefas: [],
           mensagens: [],
@@ -46,6 +48,9 @@ export async function carregarGruposDoServidor() {
         };
       });
 
+      reconstruirGradesDeGrupos();
+    } else if (resposta.status === 401) {
+      estado.bancoDeGrupos = {};
       reconstruirGradesDeGrupos();
     }
   } catch (erro) {
@@ -63,11 +68,11 @@ export async function excluirGrupoDoServidor(idUnicoOuChave) {
   }
 
   try {
-    // Garante um identificador válido caso id_unico seja nulo
     const identificadorParaExcluir = dadosGrupo.id_unico || dadosGrupo.idBanco || dadosGrupo.id || idUnicoOuChave;
 
     const resposta = await fetch(`http://localhost:3000/api/grupos/${identificadorParaExcluir}`, {
       method: "DELETE",
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
 
     if (resposta.ok) {
@@ -96,7 +101,6 @@ if (formularioCriarGrupo) {
 
     const idUnico = `grupo-${Date.now()}`;
     const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
-    const criadorAtual = estado.usuarioAtual || "Usuário";
 
     const novoGrupoDados = {
       id_unico: idUnico,
@@ -104,13 +108,12 @@ if (formularioCriarGrupo) {
       materia: materiaGrupo,
       privacidade: textoPrivacidade,
       codigo: codigoAleatorio,
-      criador: criadorAtual,
     };
 
     try {
       const resposta = await fetch("http://localhost:3000/api/grupos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify(novoGrupoDados),
       });
 
@@ -149,25 +152,50 @@ export function reconstruirGradesDeGrupos() {
   }
 
   document.getElementById("estado-vazio-grupos")?.classList.add("escondido");
-  document.getElementById("estado-vazio-meus-grupos")?.classList.add("escondido");
+
+  let temMeusGrupos = false;
+  const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
 
   chaves.forEach((chave, idx) => {
     const dadosGrupo = estado.bancoDeGrupos[chave];
     const corCartaoAtual = coresCartao[idx % coresCartao.length];
+
+    // Usamos data-id em vez de id no atributo HTML para evitar IDs duplicados no DOM
     const cartaoHTML = `
-                <div class="cartao-grupo-personalizado" id="${dadosGrupo.id}" style="background-color: ${corCartaoAtual}; position: relative;">
-                    <div class="circulo-icone-grupo">📖</div>
-                    <h4>${dadosGrupo.nome}</h4>
-                    <p>${dadosGrupo.materia}</p>
-                </div>
-            `;
-    if (idx < 5 && gradeGrupos) gradeGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
-    if (gradeMeusGrupos) gradeMeusGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
+        <div class="cartao-grupo-personalizado" data-id="${dadosGrupo.id}" style="background-color: ${corCartaoAtual}; position: relative; cursor: pointer;">
+            <div class="circulo-icone-grupo">📖</div>
+            <h4>${dadosGrupo.nome}</h4>
+            <p>${dadosGrupo.materia}</p>
+        </div>
+    `;
+
+    // 1. Exibe na grelha geral ("Explorar Grupos")
+    if (idx < 5 && gradeGrupos) {
+      gradeGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
+    }
+
+    // 2. Exibe em "Meus Grupos" APENAS se o utilizador logado for o criador
+    const criadorGrupo = (dadosGrupo.criador || "").trim().toLowerCase();
+    const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
+
+    if (ehCriador && gradeMeusGrupos) {
+      gradeMeusGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
+      temMeusGrupos = true;
+    }
   });
 
-  chaves.forEach((chave) => {
-    document.querySelectorAll(`[id="${chave}"]`).forEach((cartao) => {
-      cartao.addEventListener("click", () => abrirSalaDeAula(chave));
+  // Atualiza o estado vazio da secção "Meus Grupos"
+  if (!temMeusGrupos && gradeMeusGrupos) {
+    document.getElementById("estado-vazio-meus-grupos")?.classList.remove("escondido");
+  } else {
+    document.getElementById("estado-vazio-meus-grupos")?.classList.add("escondido");
+  }
+
+  // Associa eventos de clique aos cartões usando o atributo data-id
+  document.querySelectorAll(".cartao-grupo-personalizado").forEach((cartao) => {
+    cartao.addEventListener("click", () => {
+      const idGrupo = cartao.getAttribute("data-id");
+      if (idGrupo) abrirSalaDeAula(idGrupo);
     });
   });
 
@@ -202,12 +230,12 @@ if (barraBusca && caixaSugestoes) {
         const item = document.createElement("div");
         item.className = "item-sugestao";
         item.innerHTML = `
-                        <span class="icone-sugestao">📖</span>
-                        <div class="info-sugestao">
-                            <strong>${grupo.nome}</strong>
-                            <small>${grupo.materia} • ${grupo.privacidade}</small>
-                        </div>
-                    `;
+            <span class="icone-sugestao">📖</span>
+            <div class="info-sugestao">
+                <strong>${grupo.nome}</strong>
+                <small>${grupo.materia} • ${grupo.privacidade}</small>
+            </div>
+        `;
 
         item.addEventListener("click", () => {
           abrirSalaDeAula(grupo.id);
@@ -220,10 +248,10 @@ if (barraBusca && caixaSugestoes) {
     } else {
       caixaSugestoes.classList.remove("escondido");
       caixaSugestoes.innerHTML = `
-                    <div style="padding: 12px; text-align: center; color: #64748b; font-size: 0.85rem; font-weight: 500;">
-                        Nenhum grupo correspondente encontrado
-                    </div>
-                `;
+        <div style="padding: 12px; text-align: center; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+            Nenhum grupo correspondente encontrado
+        </div>
+      `;
     }
   });
 

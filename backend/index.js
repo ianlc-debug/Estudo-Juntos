@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const db = require('./src/database');
@@ -10,6 +11,30 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// Sessões assinadas: o ID do usuário vem do token validado, nunca do corpo enviado pelo navegador.
+const segredoSessao = process.env.SESSION_SECRET;
+function criarToken(usuario) {
+    const payload = Buffer.from(JSON.stringify({ id: usuario.id, nome: usuario.nome_usuario, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })).toString('base64url');
+    const assinatura = crypto.createHmac('sha256', segredoSessao).update(payload).digest('base64url');
+    return `${payload}.${assinatura}`;
+}
+function autenticar(req, res, next) {
+    if (!segredoSessao) return res.status(500).json({ erro: 'SESSION_SECRET não foi configurado no servidor.' });
+    const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const [payload, assinatura] = token.split('.');
+    if (!payload || !assinatura) return res.status(401).json({ erro: 'Faça login para continuar.' });
+    const esperada = crypto.createHmac('sha256', segredoSessao).update(payload).digest();
+    let recebida;
+    try { recebida = Buffer.from(assinatura, 'base64url'); } catch { return res.status(401).json({ erro: 'Sessão inválida.' }); }
+    if (recebida.length !== esperada.length || !crypto.timingSafeEqual(recebida, esperada)) return res.status(401).json({ erro: 'Sessão inválida.' });
+    try {
+        const dados = JSON.parse(Buffer.from(payload, 'base64url').toString());
+        if (!dados.id || dados.exp < Date.now()) return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
+        req.usuario = dados;
+        next();
+    } catch { return res.status(401).json({ erro: 'Sessão inválida.' }); }
+}
 
 // Rota de Teste Inicial
 app.get('/', (req, res) => {
@@ -73,6 +98,8 @@ app.post('/api/registro', async (req, res) => {
 app.post('/api/login', (req, res) => {
     const { email, senha } = req.body; // 'email' aqui recebe o valor digitado no campo de identificação
 
+    if (!segredoSessao) return res.status(500).json({ erro: 'Configure SESSION_SECRET no arquivo .env do servidor.' });
+
     // 1. Validação de campos obrigatórios
     if (!email || !senha) {
         return res.status(400).json({ erro: 'Preencha todos os campos para entrar.' });
@@ -103,6 +130,7 @@ app.post('/api/login', (req, res) => {
         // 4. Login bem-sucedido
         return res.status(200).json({
             mensagem: 'Login efetuado com sucesso!',
+            token: criarToken(usuario),
             usuario: {
                 id: usuario.id,
                 nome_usuario: usuario.nome_usuario,
@@ -257,57 +285,74 @@ app.put('/api/usuarios/senha/:identificador', async (req, res) => {
 });
 
 // Rota para Criar um Novo Grupo de Estudo
-app.post('/api/grupos', (req, res) => {
-    const { id_unico, nome, materia, privacidade, codigo, criador } = req.body;
+app.post('/api/grupos', autenticar, async (req, res) => {
+  const { id_unico, nome, materia, privacidade, codigo } = req.body;
+  if (!nome?.trim() || !materia?.trim()) return res.status(400).json({ erro: 'Informe o nome e a matéria do grupo.' });
 
-    if (!nome || !materia || !criador) {
-        return res.status(400).json({ erro: 'Preencha todos os campos obrigatórios do grupo.' });
-    }
+  try {
+    // Garante que o código de 6 dígitos e o criador são gravados na tabela
+    const sql = `
+      INSERT INTO grupos (id_unico, nome, materia, privacidade, codigo, criador, criador_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+    await db.promise().query(sql, [
+      id_unico, 
+      nome, 
+      materia, 
+      privacidade, 
+      codigo || Math.floor(100000 + Math.random() * 900000).toString(), 
+      req.usuario.nome,
+      req.usuario.id
+    ]);
 
-    const query = 'INSERT INTO grupos (id_unico, nome, materia, privacidade, codigo, criador) VALUES (?, ?, ?, ?, ?, ?)';
-
-    db.query(query, [id_unico, nome, materia, privacidade, codigo, criador], (err, resultado) => {
-        if (err) {
-            console.error("Erro ao criar grupo:", err);
-            return res.status(500).json({ erro: 'Erro interno ao salvar o grupo.' });
-        }
-
-        return res.status(201).json({ mensagem: 'Grupo criado com sucesso!' });
-    });
+    return res.status(201).json({ mensagem: "Grupo criado com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao criar grupo:", erro);
+    return res.status(500).json({ erro: "Erro ao salvar grupo no banco de dados." });
+  }
 });
 
-// Rota para Listar Todos os Grupos Guardados
-app.get('/api/grupos', (req, res) => {
-    const query = 'SELECT * FROM grupos ORDER BY id DESC';
-
-    db.query(query, (err, resultados) => {
-        if (err) {
-            console.error("Erro ao buscar grupos:", err);
-            return res.status(500).json({ erro: 'Erro interno ao buscar os grupos.' });
-        }
-
-        return res.status(200).json(resultados);
-    });
+// --- ROTA DE LISTAR GRUPOS ---
+app.get('/api/grupos', autenticar, async (req, res) => {
+  try {
+    // Todos os grupos são visíveis apenas para o usuário que os criou.
+    const [linhas] = await db.promise().query(
+      "SELECT * FROM grupos WHERE criador_id = ? ORDER BY id DESC",
+      [req.usuario.id]
+    );
+    return res.json(linhas);
+  } catch (erro) {
+    console.error("Erro ao buscar grupos:", erro);
+    return res.status(500).json({ erro: "Erro ao carregar grupos." });
+  }
 });
 
 // Rota para Excluir um Grupo de Estudo (Baseada no id_unico)
-app.delete('/api/grupos/:identificador', (req, res) => {
-    const { identificador } = req.params;
+app.delete('/api/grupos/:id', autenticar, async (req, res) => {
+  const { id } = req.params;
 
-    const query = 'DELETE FROM grupos WHERE id_unico = ? OR id = ?';
+  try {
+    const eNumero = !isNaN(id);
 
-    db.query(query, [identificador, identificador], (err, resultado) => {
-        if (err) {
-            console.error("Erro ao excluir grupo:", err);
-            return res.status(500).json({ erro: 'Erro interno ao excluir o grupo.' });
-        }
+    const sql = eNumero
+      ? "DELETE FROM grupos WHERE (id = ? OR id_unico = ?) AND criador_id = ?"
+      : "DELETE FROM grupos WHERE id_unico = ? AND criador_id = ?";
 
-        if (resultado.affectedRows > 0) {
-            return res.status(200).json({ mensagem: 'Grupo excluído com sucesso!' });
-        } else {
-            return res.status(404).json({ erro: 'Grupo não encontrado na base de dados.' });
-        }
-    });
+    const params = eNumero ? [id, id, req.usuario.id] : [id, req.usuario.id];
+
+    // ATENÇÃO: É necessário usar db.promise().query() aqui!
+    const [resultado] = await db.promise().query(sql, params);
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({ erro: "Grupo não encontrado." });
+    }
+
+    return res.json({ mensagem: "Grupo excluído com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao excluir grupo:", erro);
+    return res.status(500).json({ erro: "Erro ao excluir o grupo do banco de dados." });
+  }
 });
 
 app.listen(port, () => {
