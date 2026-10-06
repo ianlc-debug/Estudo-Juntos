@@ -122,6 +122,9 @@ node index.js
 1. Configure `backend/.env` com as credenciais do MySQL e uma chave aleatória longa em `SESSION_SECRET` (veja `.env.example`).
 2. Em uma instalação nova, execute `backend/database/scheme.sql`.
 3. Em uma instalação que já possui a tabela `grupos`, execute uma vez `backend/database/migracao_grupos_criador.sql` antes de iniciar a API. A migração associa os grupos existentes aos usuários pelo nome do criador salvo.
-4. Inicie a API e faça login novamente. Todos os grupos aparecem somente para quem os criou, independentemente da opção de privacidade. Apenas o criador pode excluir seu grupo.
+4. Em uma instalação que já possui a tabela `usuarios`, execute também uma vez `backend/database/migracao_id_publico_usuarios.sql` para criar IDs públicos para as contas existentes.
+5. Execute uma vez `backend/database/migracao_convites_membros.sql` para criar as tabelas de participantes e convites e registrar os criadores antigos como administradores dos próprios grupos.
+6. Execute uma vez `backend/database/migracao_solicitacoes_grupo.sql` para habilitar pedidos de entrada em grupos privados.
+7. Inicie a API e faça login novamente. O ID público de seis dígitos aparece no perfil. “Meus Grupos” lista apenas os grupos criados pelo usuário; os grupos de que participa aparecem em “Grupos Privados” ou “Grupos Abertos”. Pedidos de entrada em grupos privados são enviados aos administradores pelas notificações; grupos abertos aceitam a entrada imediatamente pelo código.
 
 O arquivo `.env` contém credenciais locais e não deve ser compartilhado.

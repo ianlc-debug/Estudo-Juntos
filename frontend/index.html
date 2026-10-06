@@ -158,9 +158,10 @@
             <span
               class="icone-notificacao"
               id="btn-sino-notificacoes"
-              style="cursor: pointer"
-              ><i class="fa-solid fa-bell"></i
-            ></span>
+              style="cursor: pointer; position: relative"
+              ><i class="fa-solid fa-bell"></i>
+              <span id="contador-notificacoes" style="display: none; position: absolute; top: -8px; right: -10px; background: #ef4444; color: white; border-radius: 999px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700"></span>
+            </span>
             <div class="foto-perfil"></div>
           </div>
         </header>
@@ -175,6 +176,7 @@
               &times;
             </button>
             <i
+              id="icone-sem-notificacoes"
               class="fa-regular fa-bell-slash"
               style="
                 font-size: 3rem;
@@ -186,9 +188,10 @@
             <h2 style="margin-bottom: 10px; font-size: 1.25rem">
               Notificações
             </h2>
-            <p style="color: #64748b; font-size: 0.95rem">
+            <p id="texto-sem-notificacoes" style="color: #64748b; font-size: 0.95rem">
               Você não tem nenhuma notificação no momento.
             </p>
+            <div id="lista-convites-notificacao" style="display: flex; flex-direction: column; gap: 12px; max-height: 55vh; overflow-y: auto; text-align: left"></div>
           </div>
         </div>
 
@@ -381,10 +384,7 @@
                 </div>
 
                 <div id="estado-vazio-grupos-privados" class="caixa-estado-vazio">
-                  <p>
-                    Você não possui solicitações para grupos privados no
-                    momento.
-                  </p>
+                  <p>Você ainda não participa de nenhum grupo privado.</p>
                 </div>
                 <div id="private-grade-grupos" class="grade-layout-grupos"></div>
               </section>
@@ -498,6 +498,7 @@
 
                   <div style="flex: 1">
                     <h2 id="nome-perfil">ALUNO(A)</h2>
+                    <p class="id-publico-perfil">ID do usuário: <strong id="id-publico-perfil">------</strong></p>
 
                     <p>
                       Quantidade Grupos Participante:
@@ -583,7 +584,8 @@
                     >
                       <p>
                         <i class="fa-solid fa-user" style="width: 20px"></i>
-                        <strong>Criador:</strong> Você
+                        <strong>Criador:</strong>
+                        <span id="criador-grupo-sala">—</span>
                       </p>
                       <p>
                         <i class="fa-solid fa-lock" style="width: 20px"></i>
@@ -610,7 +612,7 @@
 
                     <div style="display: flex; gap: 10px; flex-wrap: wrap">
                       <button
-                        id="btn-abrir-convite-membro"
+                      id="btn-convidar-membros"
                         style="
                           background-color: #10b981;
                           color: white;
@@ -626,6 +628,25 @@
                         "
                       >
                         <i class="fa-solid fa-user-plus"></i> Convidar Membro
+                      </button>
+                      <button
+                        id="btn-sair-grupo"
+                        type="button"
+                        style="
+                          background-color: #f59e0b;
+                          color: white;
+                          border: none;
+                          padding: 8px 16px;
+                          border-radius: 6px;
+                          font-weight: bold;
+                          cursor: pointer;
+                          font-size: 0.85rem;
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                        "
+                      >
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair do Grupo
                       </button>
                       <button
                         id="btn-excluir-grupo"
@@ -958,8 +979,11 @@
                 >
                   <input
                     type="text"
-                    id="campo-nome-convite"
-                    placeholder="Nome de Usuário do Convidado"
+                    id="campo-id-publico-convite"
+                    placeholder="ID do usuário (6 dígitos)"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
                     style="
                       width: 100%;
                       height: 42px;
@@ -969,25 +993,13 @@
                     "
                     required
                   />
-                  <input
-                    type="email"
-                    id="campo-email-convite"
-                    placeholder="E-mail do Convidado"
-                    style="
-                      width: 100%;
-                      height: 42px;
-                      padding: 0 12px;
-                      border: 1px solid #cbd5e1;
-                      border-radius: 8px;
-                    "
-                    required
-                  />
+                  <p id="mensagem-convite-grupo" role="status" style="margin: 0; font-size: 0.9rem"></p>
                   <button
                     type="submit"
                     class="btn-acao-principal"
                     style="align-self: flex-end"
                   >
-                    Enviar Convite Oficial
+                    Enviar Convite
                   </button>
                 </form>
               </div>

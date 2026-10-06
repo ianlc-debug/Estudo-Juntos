@@ -12,6 +12,7 @@ function renderizarPerfil() {
   const totalDeGrupos = Object.keys(estado.bancoDeGrupos || {}).length;
 
   const nomePerfil = document.getElementById("nome-perfil");
+  const idPublicoPerfil = document.getElementById("id-publico-perfil");
   const emailPerfil = document.getElementById("email-perfil");
   const avatarPerfil = document.getElementById("avatar-perfil");
   const perfilGruposParticipando = document.getElementById("perfil-grupos-participando");
@@ -19,6 +20,9 @@ function renderizarPerfil() {
 
   if (nomePerfil) {
     nomePerfil.textContent = estado.usuarioAtual ? estado.usuarioAtual.toUpperCase() : "";
+  }
+  if (idPublicoPerfil) {
+    idPublicoPerfil.textContent = estado.usuarioAtualIdPublico || "------";
   }
   if (emailPerfil) {
     emailPerfil.textContent = estado.usuarioAtualEmail || "Definido no sistema";
@@ -251,6 +255,7 @@ export function inicializarPerfil() {
       if (resposta.ok) {
         alert("Conta excluída com sucesso.");
         estado.usuarioAtual = null;
+        estado.usuarioAtualIdPublico = null;
 
         document.getElementById("tela-painel")?.classList.add("escondido");
         document.getElementById("tela-login")?.classList.remove("escondido");

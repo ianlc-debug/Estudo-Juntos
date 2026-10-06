@@ -12,6 +12,13 @@ const botaoFecharModal = document.getElementById("btn-fechar-modal-criar-grupo")
 const formularioCriarGrupo = document.getElementById("formulario-criar-grupo");
 const gradeGrupos = document.getElementById("grade-grupos");
 const gradeMeusGrupos = document.getElementById("grade-meus-grupos");
+const gradeGruposPrivados = document.getElementById("private-grade-grupos");
+const gradeGruposAbertos = document.getElementById("public-grade-grupos");
+
+function grupoEhPrivado(grupo) {
+  const privacidade = String(grupo.privacidade || "").toLowerCase();
+  return privacidade.includes("privad") || privacidade.includes("convidad");
+}
 
 if (botaoCriarGrupo) {
   botaoCriarGrupo.addEventListener("click", () => modalFundo.classList.remove("escondido"));
@@ -19,6 +26,11 @@ if (botaoCriarGrupo) {
 if (botaoFecharModal) {
   botaoFecharModal.addEventListener("click", () => modalFundo.classList.add("escondido"));
 }
+
+// Atualiza as listas ao voltar para a aba, por exemplo após um administrador aprovar um pedido.
+document.getElementById("nav-btn-grupos")?.addEventListener("click", () => {
+  carregarGruposDoServidor();
+});
 
 /** Função para carregar os grupos do servidor ao iniciar */
 export async function carregarGruposDoServidor() {
@@ -41,6 +53,9 @@ export async function carregarGruposDoServidor() {
           privacidade: g.privacidade,
           codigo: g.codigo, // Garante a atribuição do código vindo do banco
           criador: g.criador, // Garante a atribuição do criador vindo do banco
+          criadorId: g.criador_id,
+          ehCriador: Number(g.criador_id) === Number(estado.usuarioAtualId),
+          ehAdministrador: Boolean(Number(g.eh_administrador)),
           horarios: [],
           tarefas: [],
           mensagens: [],
@@ -136,68 +151,62 @@ if (formularioCriarGrupo) {
   });
 }
 
-/** Reconstrói as grades de grupos da Início e de Grupos a partir do estado atual. */
+/** Reconstrói as grades com grupos criados pelo usuário ou dos quais ele participa. */
 export function reconstruirGradesDeGrupos() {
   if (gradeGrupos) gradeGrupos.innerHTML = "";
   if (gradeMeusGrupos) gradeMeusGrupos.innerHTML = "";
+  if (gradeGruposPrivados) gradeGruposPrivados.innerHTML = "";
+  if (gradeGruposAbertos) gradeGruposAbertos.innerHTML = "";
 
   const chaves = Object.keys(estado.bancoDeGrupos);
   estado.totalGruposCriados = chaves.length;
-
-  if (estado.totalGruposCriados === 0) {
-    document.getElementById("estado-vazio-grupos")?.classList.remove("escondido");
-    document.getElementById("estado-vazio-meus-grupos")?.classList.remove("escondido");
-    renderizarHorariosInicio();
-    return;
-  }
-
-  document.getElementById("estado-vazio-grupos")?.classList.add("escondido");
-
-  let temMeusGrupos = false;
-  const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
+  document.getElementById("estado-vazio-grupos")?.classList.toggle("escondido", chaves.length > 0);
+  let totalMeus = 0;
+  let totalPrivados = 0;
+  let totalAbertos = 0;
 
   chaves.forEach((chave, idx) => {
     const dadosGrupo = estado.bancoDeGrupos[chave];
     const corCartaoAtual = coresCartao[idx % coresCartao.length];
+    const criarCartao = () => {
+      const cartao = document.createElement("div");
+      cartao.className = "cartao-grupo-personalizado";
+      cartao.dataset.id = dadosGrupo.id;
+      cartao.style.cssText = `background-color: ${corCartaoAtual}; position: relative; cursor: pointer;`;
+      const icone = document.createElement("div");
+      icone.className = "circulo-icone-grupo";
+      icone.textContent = "📖";
+      const nome = document.createElement("h4");
+      nome.textContent = dadosGrupo.nome;
+      const materia = document.createElement("p");
+      materia.textContent = dadosGrupo.materia;
+      cartao.append(icone, nome, materia);
+      cartao.addEventListener("click", () => {
+        limparMensagensEntrada();
+        abrirSalaDeAula(dadosGrupo.id);
+      });
+      return cartao;
+    };
 
-    // Usamos data-id em vez de id no atributo HTML para evitar IDs duplicados no DOM
-    const cartaoHTML = `
-        <div class="cartao-grupo-personalizado" data-id="${dadosGrupo.id}" style="background-color: ${corCartaoAtual}; position: relative; cursor: pointer;">
-            <div class="circulo-icone-grupo">📖</div>
-            <h4>${dadosGrupo.nome}</h4>
-            <p>${dadosGrupo.materia}</p>
-        </div>
-    `;
-
-    // 1. Exibe na grelha geral ("Explorar Grupos")
     if (idx < 5 && gradeGrupos) {
-      gradeGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
+      const cartaoInicio = criarCartao();
+      gradeGrupos.appendChild(cartaoInicio);
     }
-
-    // 2. Exibe em "Meus Grupos" APENAS se o utilizador logado for o criador
-    const criadorGrupo = (dadosGrupo.criador || "").trim().toLowerCase();
-    const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
-
-    if (ehCriador && gradeMeusGrupos) {
-      gradeMeusGrupos.insertAdjacentHTML("beforeend", cartaoHTML);
-      temMeusGrupos = true;
+    if (dadosGrupo.ehCriador) {
+      gradeMeusGrupos?.appendChild(criarCartao());
+      totalMeus += 1;
+    } else if (grupoEhPrivado(dadosGrupo)) {
+      gradeGruposPrivados?.appendChild(criarCartao());
+      totalPrivados += 1;
+    } else {
+      gradeGruposAbertos?.appendChild(criarCartao());
+      totalAbertos += 1;
     }
   });
 
-  // Atualiza o estado vazio da secção "Meus Grupos"
-  if (!temMeusGrupos && gradeMeusGrupos) {
-    document.getElementById("estado-vazio-meus-grupos")?.classList.remove("escondido");
-  } else {
-    document.getElementById("estado-vazio-meus-grupos")?.classList.add("escondido");
-  }
-
-  // Associa eventos de clique aos cartões usando o atributo data-id
-  document.querySelectorAll(".cartao-grupo-personalizado").forEach((cartao) => {
-    cartao.addEventListener("click", () => {
-      const idGrupo = cartao.getAttribute("data-id");
-      if (idGrupo) abrirSalaDeAula(idGrupo);
-    });
-  });
+  document.getElementById("estado-vazio-meus-grupos")?.classList.toggle("escondido", totalMeus > 0);
+  document.getElementById("estado-vazio-grupos-privados")?.classList.toggle("escondido", totalPrivados > 0);
+  document.getElementById("estado-vazio-grupos-publicos")?.classList.toggle("escondido", totalAbertos > 0);
 
   renderizarHorariosInicio();
 }
@@ -238,6 +247,7 @@ if (barraBusca && caixaSugestoes) {
         `;
 
         item.addEventListener("click", () => {
+          limparMensagensEntrada();
           abrirSalaDeAula(grupo.id);
           barraBusca.value = "";
           caixaSugestoes.classList.add("escondido");
@@ -272,51 +282,63 @@ const formularioEntrarPublico = document.getElementById("formulario-entrar-grupo
 const campoCodigoPublico = document.getElementById("campo-codigo-grupo-publico");
 const mensagemErroPublico = document.getElementById("mensagem-erro-grupo-publico");
 
+function limparMensagensEntrada() {
+  if (mensagemErroPrivado) mensagemErroPrivado.textContent = "";
+  if (mensagemErroPublico) mensagemErroPublico.textContent = "";
+}
+
+// As confirmações de pedido/entrada são apenas mensagens da sessão atual.
+limparMensagensEntrada();
+
+["nav-btn-inicio", "nav-btn-agenda", "nav-btn-recursos", "nav-btn-mensagens", "nav-btn-perfil"].forEach((id) => {
+  document.getElementById(id)?.addEventListener("click", limparMensagensEntrada);
+});
+window.addEventListener("popstate", limparMensagensEntrada);
+window.addEventListener("hashchange", limparMensagensEntrada);
+
 if (formularioEntrarPrivado) {
-  formularioEntrarPrivado.addEventListener("submit", (e) => {
+  formularioEntrarPrivado.addEventListener("submit", async (e) => {
     e.preventDefault();
     const valorCodigo = campoCodigoPrivado.value.trim();
-    const chaveGrupoAlvo = Object.keys(estado.bancoDeGrupos).find(
-      (chave) =>
-        estado.bancoDeGrupos[chave].codigo === valorCodigo &&
-        estado.bancoDeGrupos[chave].privacidade.includes("convidados"),
-    );
-
-    if (chaveGrupoAlvo) {
+    mensagemErroPrivado.textContent = "";
+    try {
+      const resposta = await fetch("http://localhost:3000/api/grupos/solicitar-entrada", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+        body: JSON.stringify({ codigo: valorCodigo }),
+      });
+      const resultado = await resposta.json();
+      if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível solicitar entrada.");
       mensagemErroPrivado.style.color = "#10b981";
-      mensagemErroPrivado.textContent = "Solicitação enviada com sucesso!";
-      campoCodigoPrivado.value = "";
-      setTimeout(() => {
-        mensagemErroPrivado.textContent = "";
-      }, 3000);
-    } else {
+      mensagemErroPrivado.textContent = resultado.mensagem;
+      formularioEntrarPrivado.reset();
+    } catch (erro) {
       mensagemErroPrivado.style.color = "#ef4444";
-      mensagemErroPrivado.textContent = "Código privado não encontrado ou inválido.";
+      mensagemErroPrivado.textContent = erro.message || "Não foi possível ligar ao servidor.";
     }
   });
 }
 
 if (formularioEntrarPublico) {
-  formularioEntrarPublico.addEventListener("submit", (e) => {
+  formularioEntrarPublico.addEventListener("submit", async (e) => {
     e.preventDefault();
     const valorCodigo = campoCodigoPublico.value.trim();
-    const chaveGrupoAlvo = Object.keys(estado.bancoDeGrupos).find(
-      (chave) =>
-        estado.bancoDeGrupos[chave].codigo === valorCodigo &&
-        !estado.bancoDeGrupos[chave].privacidade.includes("convidados"),
-    );
-
-    if (chaveGrupoAlvo) {
+    mensagemErroPublico.textContent = "";
+    try {
+      const resposta = await fetch("http://localhost:3000/api/grupos/entrar-aberto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+        body: JSON.stringify({ codigo: valorCodigo }),
+      });
+      const resultado = await resposta.json();
+      if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível entrar no grupo.");
       mensagemErroPublico.style.color = "#10b981";
-      mensagemErroPublico.textContent = "Você ingressou no grupo com sucesso!";
-      campoCodigoPublico.value = "";
-      setTimeout(() => {
-        mensagemErroPublico.textContent = "";
-        abrirSalaDeAula(chaveGrupoAlvo);
-      }, 1500);
-    } else {
+      mensagemErroPublico.textContent = resultado.mensagem;
+      formularioEntrarPublico.reset();
+      await carregarGruposDoServidor();
+    } catch (erro) {
       mensagemErroPublico.style.color = "#ef4444";
-      mensagemErroPublico.textContent = "Código de grupo aberto não encontrado.";
+      mensagemErroPublico.textContent = erro.message || "Não foi possível ligar ao servidor.";
     }
   });
 }

@@ -2,28 +2,33 @@
 // Lógica da Sala de Aula do Grupo (membros, horários, atividades, recados e permissões)
 
 import { estado } from "./estado.js";
-import { excluirGrupoDoServidor } from "./grupos.js";
+import { excluirGrupoDoServidor, reconstruirGradesDeGrupos } from "./grupos.js";
 import { mostrarView } from "./navegacao.js"; // <--- Importação restaurada para permitir mudar de tela
 
 // Elementos do Cabeçalho e Informações Gerais da Sala
-const nomeGrupoSala = document.getElementById("sala-nome-grupo");
-const materiaGrupoSala = document.getElementById("sala-materia-grupo");
-const tipoGrupoSala = document.getElementById("sala-tipo-grupo");
+const nomeGrupoSala = document.getElementById("nome-grupo-sala");
+const materiaGrupoSala = document.getElementById("materia-grupo-sala");
+const tipoGrupoSala = document.getElementById("tipo-grupo-sala");
+const criadorGrupoSala = document.getElementById("criador-grupo-sala");
 const codigoGrupoSala = document.getElementById("codigo-grupo-sala");
-const contadorMembrosSala = document.getElementById("sala-contador-membros");
+const contadorMembrosSala = document.getElementById("contador-membros-sala");
 
 // Secções e Painéis da Interface
-const widgetsPrincipaisSala = document.getElementById("sala-widgets-principais");
-const secaoMembrosSala = document.getElementById("sala-secao-membros");
-const secaoConviteSala = document.getElementById("sala-secao-convite");
-const listaMembrosSala = document.getElementById("sala-lista-membros");
+const widgetsPrincipaisSala = document.getElementById("widgets-principais-sala");
+const secaoMembrosSala = document.getElementById("secao-membros-sala");
+const secaoConviteSala = document.getElementById("secao-convite-sala");
+const listaMembrosSala = document.getElementById("lista-membros-sala");
 
 // Botões de Navegação e Ação
 const botaoExcluirGrupo = document.getElementById("btn-excluir-grupo");
+const botaoSairGrupo = document.getElementById("btn-sair-grupo");
 const botaoVerMembros = document.getElementById("btn-ver-membros");
 const botaoConvidarMembros = document.getElementById("btn-convidar-membros");
 const botaoFecharMembros = document.getElementById("btn-fechar-membros");
 const botaoFecharConvite = document.getElementById("btn-fechar-convite");
+const formularioConviteGrupo = document.getElementById("formulario-convite-grupo");
+const campoIdPublicoConvite = document.getElementById("campo-id-publico-convite");
+const mensagemConviteGrupo = document.getElementById("mensagem-convite-grupo");
 
 // Campos de Recados (Mensagens)
 const campoRecadoSala = document.getElementById("campo-recado-sala");
@@ -66,15 +71,18 @@ export function abrirSalaDeAula(idGrupo) {
   if (nomeGrupoSala) nomeGrupoSala.textContent = dadosGrupo.nome;
   if (materiaGrupoSala) materiaGrupoSala.textContent = dadosGrupo.materia;
   if (tipoGrupoSala) tipoGrupoSala.textContent = dadosGrupo.privacidade;
+  if (criadorGrupoSala) criadorGrupoSala.textContent = dadosGrupo.criador || "Usuário desconhecido";
   if (codigoGrupoSala) codigoGrupoSala.textContent = dadosGrupo.codigo;
 
-  // Exibe o botão de exclusão apenas para quem criou o grupo
-  const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
-  const criadorGrupo = (dadosGrupo.criador || "").trim().toLowerCase();
-  const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
+  const ehCriador = Number(dadosGrupo.criadorId) === Number(estado.usuarioAtualId);
+  const ehAdministrador = Boolean(dadosGrupo.ehAdministrador);
 
   if (botaoExcluirGrupo) {
-    botaoExcluirGrupo.style.display = ehCriador ? "inline-block" : "none";
+    botaoExcluirGrupo.style.display = ehCriador && ehAdministrador ? "inline-flex" : "none";
+  }
+  if (botaoSairGrupo) botaoSairGrupo.style.display = "inline-flex";
+  if (botaoConvidarMembros) {
+    botaoConvidarMembros.style.display = ehAdministrador ? "flex" : "none";
   }
 
   // Limpa campos de entrada
@@ -92,13 +100,21 @@ export function abrirSalaDeAula(idGrupo) {
   renderizarRecados();
 }
 
-/** Atualiza a contagem total de membros (Criador + Convidados) */
-export function atualizarContadorMembros() {
+/** Atualiza a contagem persistida de participantes do grupo. */
+export async function atualizarContadorMembros() {
   const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
   if (!dadosGrupo || !contadorMembrosSala) return;
-
-  const total = 1 + (dadosGrupo.membrosConvidados ? dadosGrupo.membrosConvidados.length : 0);
-  contadorMembrosSala.textContent = `${total} membro${total > 1 ? "s" : ""}`;
+  try {
+    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+    });
+    if (!resposta.ok) return;
+    const participantes = await resposta.json();
+    const total = participantes.length;
+    contadorMembrosSala.textContent = `${total} membro${total === 1 ? "" : "s"}`;
+  } catch (erro) {
+    console.error("Erro ao atualizar participantes:", erro);
+  }
 }
 
 /** Renderiza os horários cadastrados no grupo */
@@ -206,6 +222,77 @@ export function renderizarRecados() {
 
 // --- Event Listeners --------------------------------------------------------
 
+async function carregarParticipantesDoGrupo() {
+  const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+  if (!dadosGrupo) return;
+  if (listaMembrosSala) listaMembrosSala.textContent = "Carregando participantes…";
+
+  try {
+    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) throw new Error(dados.erro || "Não foi possível carregar os participantes.");
+    if (listaMembrosSala) listaMembrosSala.replaceChildren();
+
+    dados.forEach((participante) => {
+      const ehAdministrador = Number(participante.administrador) === 1;
+      const cartao = document.createElement("div");
+      cartao.style.cssText = "display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;";
+      const avatar = document.createElement("div");
+      avatar.textContent = (participante.nome_usuario || "U").charAt(0).toUpperCase();
+      avatar.style.cssText = `width: 36px; height: 36px; flex: 0 0 36px; background: ${ehAdministrador ? "#3b82f6" : "#10b981"}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;`;
+      const informacoes = document.createElement("div");
+      informacoes.style.flex = "1";
+      const nome = document.createElement("strong");
+      nome.textContent = participante.nome_usuario;
+      nome.style.cssText = "color: #1e293b; font-size: 0.95rem;";
+      const id = document.createElement("small");
+      id.textContent = `ID ${participante.id_publico}`;
+      id.style.cssText = "display: block; color: #64748b; margin-top: 3px;";
+      const papel = document.createElement("span");
+      papel.textContent = ehAdministrador ? "Administrador" : "Participante";
+      papel.style.cssText = `font-size: 0.75rem; background: ${ehAdministrador ? "#dbeafe" : "#ecfdf5"}; color: ${ehAdministrador ? "#1e40af" : "#047857"}; padding: 2px 7px; border-radius: 4px; margin-left: 8px; font-weight: bold;`;
+      informacoes.append(nome, papel, id);
+      cartao.append(avatar, informacoes);
+
+      if (dadosGrupo.ehAdministrador && !ehAdministrador) {
+        const botaoPromover = document.createElement("button");
+        botaoPromover.type = "button";
+        botaoPromover.textContent = "Tornar administrador";
+        botaoPromover.style.cssText = "border: 0; border-radius: 6px; padding: 8px 12px; background: #2563eb; color: white; font-weight: 700; cursor: pointer;";
+        botaoPromover.addEventListener("click", async () => {
+          botaoPromover.disabled = true;
+          botaoPromover.textContent = "Promovendo…";
+          try {
+            const respostaPromocao = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/administradores`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${estado.tokenSessao || ""}`,
+              },
+              body: JSON.stringify({ idPublico: participante.id_publico }),
+            });
+            const resultado = await respostaPromocao.json();
+            if (!respostaPromocao.ok) throw new Error(resultado.erro || "Não foi possível promover o participante.");
+            await carregarParticipantesDoGrupo();
+          } catch (erro) {
+            alert(erro.message || "Não foi possível ligar ao servidor.");
+            botaoPromover.disabled = false;
+            botaoPromover.textContent = "Tornar administrador";
+          }
+        });
+        cartao.appendChild(botaoPromover);
+      }
+      listaMembrosSala?.appendChild(cartao);
+    });
+    if (!dados.length && listaMembrosSala) listaMembrosSala.textContent = "Ainda não há participantes.";
+    if (contadorMembrosSala) contadorMembrosSala.textContent = `${dados.length} membro${dados.length === 1 ? "" : "s"}`;
+  } catch (erro) {
+    if (listaMembrosSala) listaMembrosSala.textContent = erro.message;
+  }
+}
+
 if (botaoExcluirGrupo) {
   botaoExcluirGrupo.addEventListener("click", () => {
     if (estado.idGrupoEmEdicao) {
@@ -214,52 +301,49 @@ if (botaoExcluirGrupo) {
   });
 }
 
+if (botaoSairGrupo) {
+  botaoSairGrupo.addEventListener("click", async () => {
+    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    if (!dadosGrupo) return;
+    if (!confirm("Tem certeza de que deseja sair deste grupo? Se você for o último participante, o grupo será excluído.")) return;
+
+    botaoSairGrupo.disabled = true;
+    botaoSairGrupo.textContent = "Saindo…";
+    const controlador = new AbortController();
+    const temporizador = window.setTimeout(() => controlador.abort(), 15000);
+    try {
+      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/sair`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+        signal: controlador.signal,
+      });
+      const resultado = await resposta.json();
+      if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível sair do grupo.");
+
+      delete estado.bancoDeGrupos[dadosGrupo.id];
+      estado.idGrupoEmEdicao = null;
+      reconstruirGradesDeGrupos();
+      mostrarView("grupos", "grupos");
+      alert(resultado.mensagem);
+    } catch (erro) {
+      const mensagem = erro.name === "AbortError"
+        ? "O servidor demorou para responder. Atualize a página para confirmar se a saída foi concluída."
+        : (erro.message || "Não foi possível ligar ao servidor.");
+      alert(mensagem);
+    } finally {
+      window.clearTimeout(temporizador);
+      botaoSairGrupo.disabled = false;
+      botaoSairGrupo.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Sair do Grupo';
+    }
+  });
+}
+
 if (botaoVerMembros) {
-  botaoVerMembros.addEventListener("click", () => {
+  botaoVerMembros.addEventListener("click", async () => {
     if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.add("escondido");
     if (secaoMembrosSala) secaoMembrosSala.classList.remove("escondido");
     if (secaoConviteSala) secaoConviteSala.classList.add("escondido");
-
-    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
-    if (!dadosGrupo) return;
-
-    const nomeCriador = dadosGrupo.criador || "Administrador";
-    const usuarioLogado = (estado.usuarioAtual || "").trim().toLowerCase();
-    const criadorGrupo = nomeCriador.trim().toLowerCase();
-    const ehCriador = usuarioLogado !== "" && criadorGrupo === usuarioLogado;
-
-    let listaHTML = `
-      <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
-        <div style="width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
-          ${nomeCriador.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <strong style="color: #1e293b; font-size: 0.95rem;">${nomeCriador.toUpperCase()}</strong>
-          <span style="font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">
-            ${ehCriador ? "Você (Administrador)" : "Administrador"}
-          </span>
-        </div>
-      </div>
-    `;
-
-    if (dadosGrupo.membrosConvidados && dadosGrupo.membrosConvidados.length > 0) {
-      dadosGrupo.membrosConvidados.forEach((membro) => {
-        listaHTML += `
-          <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
-            <div style="width: 36px; height: 36px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
-              ${membro.nome ? membro.nome.charAt(0).toUpperCase() : "M"}
-            </div>
-            <div>
-              <strong style="color: #1e293b; font-size: 0.95rem;">${(membro.nome || "Membro").toUpperCase()}</strong>
-              ${membro.email ? `<span style="font-size: 0.75rem; color: #64748b; margin-left: 8px;">(${membro.email})</span>` : ""}
-              <span style="font-size: 0.75rem; background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">Convidado</span>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    if (listaMembrosSala) listaMembrosSala.innerHTML = listaHTML;
+    await carregarParticipantesDoGrupo();
   });
 }
 
@@ -272,9 +356,49 @@ if (botaoFecharMembros) {
 
 if (botaoConvidarMembros) {
   botaoConvidarMembros.addEventListener("click", () => {
+    if (!estado.bancoDeGrupos[estado.idGrupoEmEdicao]?.ehAdministrador) {
+      alert("Somente administradores podem convidar pessoas.");
+      return;
+    }
     if (widgetsPrincipaisSala) widgetsPrincipaisSala.classList.add("escondido");
     if (secaoMembrosSala) secaoMembrosSala.classList.add("escondido");
     if (secaoConviteSala) secaoConviteSala.classList.remove("escondido");
+  });
+}
+
+if (formularioConviteGrupo) {
+  formularioConviteGrupo.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
+    const idPublico = campoIdPublicoConvite?.value.trim();
+    if (!dadosGrupo || !idPublico) return;
+    if (!dadosGrupo.ehAdministrador) {
+      if (mensagemConviteGrupo) mensagemConviteGrupo.textContent = "Somente administradores podem convidar.";
+      return;
+    }
+
+    try {
+      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/convites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${estado.tokenSessao || ""}`,
+        },
+        body: JSON.stringify({ idPublico }),
+      });
+      const resultado = await resposta.json();
+      if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível enviar o convite.");
+      if (mensagemConviteGrupo) {
+        mensagemConviteGrupo.textContent = resultado.mensagem;
+        mensagemConviteGrupo.style.color = "#15803d";
+      }
+      formularioConviteGrupo.reset();
+    } catch (erro) {
+      if (mensagemConviteGrupo) {
+        mensagemConviteGrupo.textContent = erro.message;
+        mensagemConviteGrupo.style.color = "#dc2626";
+      }
+    }
   });
 }
 

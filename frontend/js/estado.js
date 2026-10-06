@@ -5,6 +5,7 @@ export const estado = {
   usuarioAtual: "ALUNO(A)",
   usuarioAtualEmail: "", // Adicionado para rastrear o e-mail corretamente
   usuarioAtualId: null,
+  usuarioAtualIdPublico: null,
   tokenSessao: null,
   bancoDeGrupos: {},
   bancoDeEventos: [],
