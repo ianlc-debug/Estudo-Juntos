@@ -1,12 +1,22 @@
 // estado.js
 // Estado da aplicação, compartilhado entre os módulos.
 
+function lerSessaoSalva() {
+  try {
+    return JSON.parse(sessionStorage.getItem("estudoJuntosSessao") || "null") || {};
+  } catch {
+    return {};
+  }
+}
+
+const sessaoSalva = lerSessaoSalva();
+
 export const estado = {
-  usuarioAtual: "ALUNO(A)",
-  usuarioAtualEmail: "", // Adicionado para rastrear o e-mail corretamente
-  usuarioAtualId: null,
-  usuarioAtualIdPublico: null,
-  tokenSessao: null,
+  usuarioAtual: sessaoSalva.usuarioAtual || "ALUNO(A)",
+  usuarioAtualEmail: sessaoSalva.usuarioAtualEmail || "",
+  usuarioAtualId: sessaoSalva.usuarioAtualId || null,
+  usuarioAtualIdPublico: sessaoSalva.usuarioAtualIdPublico || null,
+  tokenSessao: sessaoSalva.tokenSessao || null,
   bancoDeGrupos: {},
   bancoDeEventos: [],
   idGrupoEmEdicao: null,

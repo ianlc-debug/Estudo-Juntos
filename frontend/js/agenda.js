@@ -18,20 +18,53 @@ const formularioModalDia = document.getElementById("formulario-modal-dia");
 const campoModalDia = document.getElementById("campo-modal-dia");
 
 /** Abre a Agenda já no mês atual e renderiza o calendário. */
-function abrirAgendaNoMesAtual() {
+async function abrirAgendaNoMesAtual() {
   if (!selectMes) return;
   mostrarView("agenda");
   const mesAtual = new Date().getMonth();
   selectMes.value = mesAtual;
+  try {
+    await carregarEventosParticulares();
+  } catch (erro) {
+    alert(erro.message || "Não foi possível carregar seus eventos.");
+  }
   renderizarCalendario(mesAtual);
 }
 
-botaoNavAgenda?.addEventListener("click", () => abrirAgendaNoMesAtual());
-botaoVerAgendaInicio?.addEventListener("click", () => abrirAgendaNoMesAtual());
+botaoNavAgenda?.addEventListener("click", () => { void abrirAgendaNoMesAtual(); });
+botaoVerAgendaInicio?.addEventListener("click", () => { void abrirAgendaNoMesAtual(); });
 
 selectMes?.addEventListener("change", (e) => {
   renderizarCalendario(parseInt(e.target.value));
 });
+
+window.addEventListener("horarios-grupo-atualizados", () => {
+  if (selectMes) renderizarCalendario(parseInt(selectMes.value));
+});
+
+async function carregarEventosParticulares() {
+  estado.bancoDeEventos = [];
+  const resposta = await fetch("http://localhost:3000/api/eventos-particulares", {
+    headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+  });
+  const dados = await lerRespostaAgenda(resposta);
+  if (!resposta.ok) throw new Error(dados.erro || "Não foi possível carregar seus eventos.");
+  estado.bancoDeEventos = dados.map((evento) => {
+    const [ano, mes, dia] = evento.data_evento.split("-").map(Number);
+    return { id: evento.id, titulo: evento.titulo, dia, mes: mes - 1, ano };
+  });
+}
+
+async function lerRespostaAgenda(resposta) {
+  const texto = await resposta.text();
+  try {
+    return texto ? JSON.parse(texto) : {};
+  } catch {
+    throw new Error(texto.trimStart().startsWith("<")
+      ? `A API respondeu HTML em vez de JSON (HTTP ${resposta.status}).`
+      : `Resposta inválida da API (HTTP ${resposta.status}).`);
+  }
+}
 
 export function renderizarCalendario(indiceMes) {
   if (!gradeDias) return;
@@ -86,7 +119,7 @@ export function renderizarCalendario(indiceMes) {
     Object.values(estado.bancoDeGrupos).forEach((grupo) => {
       if (grupo.horarios && grupo.horarios.length > 0) {
         grupo.horarios.forEach((horario) => {
-          if (horario.includes(nomeDiaDaSemana)) {
+          if (horario.dia === nomeDiaDaSemana) {
             const seloAzul = document.createElement("div");
             seloAzul.style.background = "#2563eb";
             seloAzul.style.color = "white";
@@ -163,11 +196,11 @@ function renderizarEventosDoDia() {
   Object.values(estado.bancoDeGrupos).forEach((grupo) => {
     if (grupo.horarios && grupo.horarios.length > 0) {
       grupo.horarios.forEach((horario) => {
-        if (horario.includes(nomeDiaDaSemana)) {
+        if (horario.dia === nomeDiaDaSemana) {
           todosOsEventosDoDia.push({
             tipo: "grupo",
             titulo: `Aula/Reunião do grupo: ${grupo.nome}`,
-            descricao: horario,
+            descricao: `${horario.dia}, ${horario.inicio} - ${horario.fim}${horario.descricao ? ` • ${horario.descricao}` : ""}`,
             objetoOriginal: grupo,
           });
         }
@@ -212,18 +245,16 @@ function renderizarEventosDoDia() {
                 `;
     } else {
       itemEvento.style.borderLeft = "4px solid #10b981";
-      itemEvento.innerHTML = `
-                    <span style="font-size: 0.9rem; color: #334155;">⭐ ${evento.titulo}</span>
-                    <button class="btn-excluir" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem;">Excluir</button>
-                `;
-
-      itemEvento.querySelector(".btn-excluir").addEventListener("click", () => {
-        const indiceGlobal = estado.bancoDeEventos.indexOf(evento.objetoOriginal);
-        if (indiceGlobal > -1) estado.bancoDeEventos.splice(indiceGlobal, 1);
-
-        renderizarEventosDoDia();
-        renderizarCalendario(mes);
-      });
+      const titulo = document.createElement("span");
+      titulo.textContent = `⭐ ${evento.titulo}`;
+      titulo.style.cssText = "font-size: 0.9rem; color: #334155; overflow-wrap: anywhere;";
+      const botaoExcluir = document.createElement("button");
+      botaoExcluir.type = "button";
+      botaoExcluir.className = "btn-excluir";
+      botaoExcluir.textContent = "Excluir";
+      botaoExcluir.style.cssText = "flex: 0 0 auto; background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem;";
+      botaoExcluir.addEventListener("click", () => { void excluirEventoParticular(evento.objetoOriginal, botaoExcluir); });
+      itemEvento.append(titulo, botaoExcluir);
     }
 
     listaEventosModalDia.appendChild(itemEvento);
@@ -238,16 +269,50 @@ modalDetalhesDia?.addEventListener("click", (e) => {
   if (e.target === modalDetalhesDia) modalDetalhesDia.classList.add("escondido");
 });
 
-formularioModalDia?.addEventListener("submit", (e) => {
+formularioModalDia?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const titulo = campoModalDia.value.trim();
   if (!titulo) return;
 
   const { dia, mes, ano } = estado.dataSelecionada;
-  estado.bancoDeEventos.push({ titulo, dia, mes, ano });
-
-  campoModalDia.value = "";
-  renderizarEventosDoDia();
-  renderizarCalendario(mes);
+  const botaoEnviar = formularioModalDia.querySelector('button[type="submit"]');
+  if (botaoEnviar) botaoEnviar.disabled = true;
+  try {
+    const data = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+    const resposta = await fetch("http://localhost:3000/api/eventos-particulares", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+      body: JSON.stringify({ titulo, data }),
+    });
+    const resultado = await lerRespostaAgenda(resposta);
+    if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível salvar o evento.");
+    estado.bancoDeEventos.push({ id: resultado.id, titulo: resultado.titulo, dia, mes, ano });
+    campoModalDia.value = "";
+    renderizarEventosDoDia();
+    renderizarCalendario(mes);
+  } catch (erro) {
+    alert(erro.message || "Não foi possível salvar o evento.");
+  } finally {
+    if (botaoEnviar) botaoEnviar.disabled = false;
+  }
 });
+
+async function excluirEventoParticular(evento, botao) {
+  if (!confirm(`Remover o evento “${evento.titulo}”?`)) return;
+  botao.disabled = true;
+  try {
+    const resposta = await fetch(`http://localhost:3000/api/eventos-particulares/${encodeURIComponent(evento.id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+    });
+    const resultado = await lerRespostaAgenda(resposta);
+    if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível remover o evento.");
+    estado.bancoDeEventos = estado.bancoDeEventos.filter((item) => String(item.id) !== String(evento.id));
+    renderizarEventosDoDia();
+    renderizarCalendario(estado.dataSelecionada.mes);
+  } catch (erro) {
+    alert(erro.message || "Não foi possível remover o evento.");
+    botao.disabled = false;
+  }
+}

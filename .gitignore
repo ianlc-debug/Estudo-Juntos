@@ -128,6 +128,9 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# Uploaded activity attachments are stored outside source control.
+backend/uploads/
+
 # yarn v2
 .yarn/cache
 .yarn/unplugged

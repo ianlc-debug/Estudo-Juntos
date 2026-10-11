@@ -20,9 +20,96 @@
 }
 
 .cartao-grupo-recursos h3 {
-  margin: 0 0 18px;
+  margin: 0;
   color: #1e293b;
   font-size: 1.2rem;
+}
+
+.cabecalho-grupo-recursos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.contador-recursos {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.lista-arquivos-recursos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cartao-arquivo-recurso {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.cartao-arquivo-recurso > i {
+  flex: 0 0 38px;
+  color: #3b82f6;
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.informacoes-arquivo-recurso {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.informacoes-arquivo-recurso strong {
+  overflow-wrap: anywhere;
+  color: #1e293b;
+  font-size: 0.92rem;
+}
+
+.informacoes-arquivo-recurso small {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.botao-baixar-recurso {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.botao-baixar-recurso:hover {
+  background: #dbeafe;
+}
+
+.botao-baixar-recurso:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .recurso-vazio {
@@ -43,6 +130,30 @@
 .recurso-vazio p {
   margin: 0;
   font-size: 0.95rem;
+}
+
+.recurso-vazio {
+  padding: 20px;
+  border-width: 1px;
+}
+
+.erro-recursos {
+  color: #b91c1c;
+}
+
+@media (max-width: 560px) {
+  .cartao-arquivo-recurso {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .informacoes-arquivo-recurso {
+    flex-basis: calc(100% - 52px);
+  }
+
+  .botao-baixar-recurso {
+    margin-left: auto;
+  }
 }
 
 .caixa-estado-vazio {

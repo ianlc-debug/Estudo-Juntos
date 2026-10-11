@@ -441,43 +441,48 @@
               </section>
 
               <section class="secao-painel">
-                <div class="cartao-mensagens">
-                  <div class="area-adicionar-contato">
-                    <input
-                      type="text"
-                      id="campo-nome-contato"
-                      placeholder="E-mail do contato"
-                    />
+                <div class="cartao-mensagens mensagens-layout">
+                  <aside class="painel-contatos-mensagens" aria-label="Contatos">
+                    <label class="busca-conversas" for="buscar-contatos-mensagens">
+                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                      <input id="buscar-contatos-mensagens" type="search" placeholder="Buscar conversas..." />
+                    </label>
+                    <form id="form-adicionar-contato" class="area-adicionar-contato">
+                      <div class="adicionar-contato-titulo"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Adicionar contato</span></div>
+                      <p>Informe o ID público de seis dígitos</p>
+                      <div class="adicionar-contato-campos">
+                        <input id="campo-id-contato" type="text" inputmode="numeric" autocomplete="off" maxlength="6" pattern="[0-9]{6}" placeholder="Ex.: 123456" aria-label="ID público do contato" required />
+                        <button id="btn-adicionar-contato" type="submit" aria-label="Adicionar contato"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                      </div>
+                      <div id="status-adicionar-contato" class="status-mensagens" role="status" aria-live="polite"></div>
+                    </form>
+                    <div id="lista-contatos" class="lista-contatos-mensagens"></div>
+                    <div id="estado-vazio-contatos" class="estado-vazio-contatos escondido">Nenhum contato por aqui ainda. Adicione alguém usando o ID público.</div>
+                  </aside>
 
-                    <button id="btn-adicionar-contato">Adicionar</button>
-                  </div>
-
-                  <h3>Contatos</h3>
-
-                  <div id="lista-contatos"></div>
-
-                  <div
-                    class="caixa-estado-vazio"
-                    style="
-                      border: 2px dashed #cbd5e1;
-                      border-radius: 10px;
-                      padding: 30px;
-                      text-align: center;
-                      background: #f8fafc;
-                      margin-top: 15px;
-                    "
-                  >
-                    <p
-                      style="
-                        color: #64748b;
-                        margin: 0;
-                        font-size: 0.95rem;
-                        font-weight: 500;
-                      "
-                    >
-                      Você não possui nenhum contato adicionado no momento.
-                    </p>
-                  </div>
+                  <section class="painel-conversa" aria-label="Conversa">
+                    <div id="estado-conversa-vazia" class="estado-conversa-vazia">
+                      <div class="icone-conversa-vazia"><i class="fa-regular fa-comments" aria-hidden="true"></i></div>
+                      <h2>Suas conversas</h2>
+                      <p>Adicione um contato pelo ID e comece a conversar sobre os estudos.</p>
+                    </div>
+                    <div id="conteudo-conversa" class="conteudo-conversa escondido">
+                      <header class="cabecalho-conversa">
+                        <div id="avatar-contato-conversa" class="avatar-contato-conversa">?</div>
+                        <div><h2 id="nome-contato-conversa"></h2><p>Contato de estudo</p></div>
+                      </header>
+                      <div id="lista-mensagens" class="lista-mensagens" aria-live="polite"></div>
+                      <form id="form-enviar-mensagem" class="form-enviar-mensagem">
+                        <label class="botao-anexar-mensagem" for="arquivo-mensagem" title="Anexar arquivo"><i class="fa-solid fa-paperclip" aria-hidden="true"></i><span class="sr-only">Anexar arquivo</span></label>
+                        <input id="arquivo-mensagem" class="escondido" type="file" />
+                        <div class="entrada-mensagem">
+                          <div id="nome-arquivo-mensagem" class="nome-arquivo-mensagem escondido"></div>
+                          <textarea id="campo-mensagem" rows="1" maxlength="5000" placeholder="Digite uma mensagem..."></textarea>
+                        </div>
+                        <button id="btn-enviar-mensagem" class="botao-enviar-mensagem" type="submit" aria-label="Enviar mensagem"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+                      </form>
+                    </div>
+                  </section>
                 </div>
               </section>
             </div>
@@ -735,7 +740,7 @@
                 id="widgets-principais-sala"
                 style="display: flex; flex-direction: column; gap: 25px"
               >
-                <div class="caixa-cartao-sala">
+                <div id="painel-gerenciar-horarios" class="caixa-cartao-sala">
                   <label class="titulo-secao-sala"
                     >🗓️ Vincular Novos Horários Semanais</label
                   >
@@ -810,19 +815,23 @@
                       margin-bottom: 20px;
                     "
                   >
-                    <input
-                      type="text"
+                    <textarea
                       id="campo-tarefa-sala"
-                      placeholder="Título ou descrição da nova atividade..."
+                      rows="3"
+                      maxlength="5000"
+                      placeholder="Escreva uma atividade ou descrição (opcional se anexar um arquivo)..."
                       style="
                         width: 100%;
-                        height: 42px;
-                        padding: 0 12px;
+                        min-height: 84px;
+                        padding: 12px;
                         border: 1px solid #cbd5e1;
                         border-radius: 8px;
                         outline: none;
+                        resize: vertical;
+                        font: inherit;
                       "
-                    />
+                    ></textarea>
+                    <input type="file" id="campo-arquivo-atividade" hidden />
 
                     <div
                       style="
@@ -835,26 +844,14 @@
                     >
                       <button
                         type="button"
-                        id="btn-simular-upload"
-                        style="
-                          background: #f1f5f9;
-                          border: 1px dashed #cbd5e1;
-                          padding: 10px 16px;
-                          border-radius: 8px;
-                          color: #475569;
-                          font-weight: 600;
-                          cursor: pointer;
-                          font-size: 0.85rem;
-                          display: flex;
-                          align-items: center;
-                          gap: 8px;
-                        "
+                        id="btn-anexar-atividade"
+                        class="btn-anexar-atividade"
                       >
-                        <i class="fa-solid fa-paperclip"></i> Anexar Arquivo
-                        (PDF, PNG, etc.)
+                        <i class="fa-solid fa-paperclip"></i> Anexar arquivo
                       </button>
-                      <button id="btn-publicar-tarefa" class="btn-acao-principal">
-                        Cadastrar Atividade
+                      <span id="nome-arquivo-atividade" class="nome-arquivo-atividade escondido" aria-live="polite"></span>
+                      <button type="button" id="btn-publicar-tarefa" class="btn-acao-principal">
+                        Publicar atividade
                       </button>
                     </div>
                   </div>
@@ -879,6 +876,7 @@
                     <textarea
                       id="campo-recado-sala"
                       rows="3"
+                      maxlength="5000"
                       placeholder="Escreva um comunicado para o grupo..."
                       style="
                         width: 100%;
@@ -892,6 +890,7 @@
                       "
                     ></textarea>
                     <button
+                      type="button"
                       id="btn-publicar-recado"
                       class="btn-acao-principal"
                       style="align-self: flex-end"
@@ -1111,6 +1110,7 @@
               type="text"
               id="campo-modal-dia"
               placeholder="Ex: Estudar Cálculo..."
+              maxlength="255"
               required
               style="
                 flex: 1;

@@ -30,9 +30,13 @@ export function resetarNavAtiva() {
 }
 
 export function mostrarView(chaveView, chaveNav = chaveView, salvarNoHistorico = true) {
+  if (chaveView !== "salaDeAula") {
+    sessionStorage.removeItem("estudoJuntosGrupoAtual");
+  }
   resetarNavAtiva();
   if (chaveNav && botoesNav[chaveNav]) botoesNav[chaveNav].classList.add("ativo");
   if (views[chaveView]) views[chaveView].classList.remove("escondido");
+  window.dispatchEvent(new CustomEvent("estudo-juntos:viewchange", { detail: { view: chaveView } }));
 
   if (salvarNoHistorico) {
     history.pushState(

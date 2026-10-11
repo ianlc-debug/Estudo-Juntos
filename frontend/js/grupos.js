@@ -56,9 +56,9 @@ export async function carregarGruposDoServidor() {
           criadorId: g.criador_id,
           ehCriador: Number(g.criador_id) === Number(estado.usuarioAtualId),
           ehAdministrador: Boolean(Number(g.eh_administrador)),
-          horarios: [],
+          horarios: Array.isArray(g.horarios) ? g.horarios : [],
           tarefas: [],
-          mensagens: [],
+          recados: [],
           membrosConvidados: [],
         };
       });

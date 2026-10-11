@@ -125,6 +125,12 @@ node index.js
 4. Em uma instalação que já possui a tabela `usuarios`, execute também uma vez `backend/database/migracao_id_publico_usuarios.sql` para criar IDs públicos para as contas existentes.
 5. Execute uma vez `backend/database/migracao_convites_membros.sql` para criar as tabelas de participantes e convites e registrar os criadores antigos como administradores dos próprios grupos.
 6. Execute uma vez `backend/database/migracao_solicitacoes_grupo.sql` para habilitar pedidos de entrada em grupos privados.
-7. Inicie a API e faça login novamente. O ID público de seis dígitos aparece no perfil. “Meus Grupos” lista apenas os grupos criados pelo usuário; os grupos de que participa aparecem em “Grupos Privados” ou “Grupos Abertos”. Pedidos de entrada em grupos privados são enviados aos administradores pelas notificações; grupos abertos aceitam a entrada imediatamente pelo código.
+7. Execute uma vez `backend/database/migracao_horarios_grupo.sql` para habilitar horários semanais dos grupos existentes.
+8. Execute uma vez `backend/database/migracao_atividades_grupo.sql` para habilitar as publicações e anexos do quadro de atividades.
+9. Execute uma vez `backend/database/migracao_mural_grupo.sql` para habilitar as publicações do mural.
+10. Execute uma vez `backend/database/migracao_eventos_particulares.sql` para habilitar eventos particulares persistentes na agenda.
+11. Execute uma vez `backend/database/migracao_mensagens_privadas.sql` para habilitar contatos e conversas privadas.
+12. Execute uma vez `backend/database/migracao_solicitacoes_contato.sql` para habilitar solicitações de contato.
+13. Inicie a API e faça login novamente. O ID público de seis dígitos aparece no perfil e pode ser usado para enviar solicitações de contato na aba “Mensagens”; quem recebe pode aceitar ou recusar. Contatos aceitos podem trocar mensagens de texto e anexar arquivos de até 20 MB. “Meus Grupos” lista apenas os grupos criados pelo usuário; os grupos de que participa aparecem em “Grupos Privados” ou “Grupos Abertos”. Pedidos de entrada em grupos privados são enviados aos administradores pelas notificações; grupos abertos aceitam a entrada imediatamente pelo código. Os anexos são guardados em `backend/uploads/`, uma pasta ignorada pelo Git. Em servidores, configure `UPLOADS_DIR` para apontar a um diretório persistente.
 
 O arquivo `.env` contém credenciais locais e não deve ser compartilhado.

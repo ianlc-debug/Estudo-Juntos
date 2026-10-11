@@ -1,91 +1,203 @@
-/* Tela de Mensagens: contatos e caixa de chat */
-
-.cartao-mensagens {
-  background: white;
+/* Mensagens privadas: lista de contatos e conversa. */
+.mensagens-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 34%) minmax(0, 1fr);
+  height: min(72vh, 780px);
+  min-height: 590px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dce6f3;
   border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+}
+
+.painel-contatos-mensagens {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  padding: 16px;
+  border-right: 1px solid #e2eaf4;
+  background: #fff;
+  overflow: hidden;
+}
+
+.busca-conversas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 13px;
+  color: #6680a8;
+  background: #f1f5fa;
+  border-radius: 22px;
+}
+
+.busca-conversas input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #1e3558;
+  background: transparent;
+  font: inherit;
 }
 
 .area-adicionar-contato {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  margin: 14px 0 12px;
+  padding: 12px;
+  border: 1px solid #dce6f3;
+  border-radius: 14px;
+  background: #fbfdff;
 }
 
-.area-adicionar-contato input {
+.adicionar-contato-titulo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #20395f;
+  font-weight: 700;
+}
+
+.adicionar-contato-titulo i { color: #347bf4; }
+
+.area-adicionar-contato p {
+  margin: 4px 0 10px 25px;
+  color: #7185a5;
+  font-size: .78rem;
+}
+
+.adicionar-contato-campos { display: flex; gap: 8px; }
+
+.adicionar-contato-campos input {
+  min-width: 0;
   flex: 1;
-  height: 42px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 0 12px;
-  outline: none;
-  transition: 0.2s;
+  height: 39px;
+  padding: 0 11px;
+  border: 1px solid #d5dfec;
+  border-radius: 9px;
+  outline: 0;
+  font: inherit;
 }
 
-.area-adicionar-contato input:focus {
-  border-color: #2563eb;
-}
+.adicionar-contato-campos input:focus,
+.entrada-mensagem textarea:focus { border-color: #347bf4; }
 
-.area-adicionar-contato button,
-.caixa-chat button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0 18px;
+.adicionar-contato-campos button,
+.botao-enviar-mensagem {
+  display: grid;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: #347bf4;
   cursor: pointer;
-  font-weight: 600;
+  transition: background .15s ease, transform .15s ease;
 }
 
-.area-adicionar-contato button:hover,
-.caixa-chat button:hover {
-  background: #1d4ed8;
-}
+.adicionar-contato-campos button:hover,
+.botao-enviar-mensagem:hover { background: #1d62db; }
+.adicionar-contato-campos button:active,
+.botao-enviar-mensagem:active { transform: scale(.96); }
+.adicionar-contato-campos button:disabled,
+.botao-enviar-mensagem:disabled { opacity: .55; cursor: wait; }
 
-#lista-contatos {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 15px 0 25px;
-}
+.status-mensagens { min-height: 0; color: #647a9b; font-size: .8rem; }
+.status-mensagens:not(:empty) { margin-top: 8px; }
+.status-mensagens.erro { color: #c2414b; }
+.status-mensagens.sucesso { color: #16805a; }
+
+.lista-contatos-mensagens { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; gap: 5px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.item-contato { display: flex; min-height: 63px; align-items: center; gap: 2px; }
+.item-contato .btn-contato { flex: 1; }
+.botao-excluir-contato { display: grid; width: 32px; min-width: 32px; height: 32px; place-items: center; border: 0; border-radius: 9px; color: #8494aa; background: transparent; cursor: pointer; opacity: .7; }
+.botao-excluir-contato:hover, .botao-excluir-contato:focus-visible { color: #c2414b; background: #fff0f0; opacity: 1; }
 
 .btn-contato {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border: 0;
+  border-radius: 13px;
+  color: #20395f;
+  background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: 0.2s;
-  font-weight: 500;
+  transition: background .15s ease;
 }
 
-.btn-contato:hover {
-  background: #eff6ff;
-  border-color: #2563eb;
+.btn-contato:hover, .btn-contato.ativo { background: #edf4ff; }
+
+.avatar-contato {
+  display: grid;
+  width: 43px;
+  min-width: 43px;
+  height: 43px;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(145deg, #3588fa, #2459e8);
+  font-weight: 700;
 }
 
-.caixa-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.detalhes-contato { min-width: 0; flex: 1; }
+.linha-contato-titulo { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.nome-contato { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.hora-contato { color: #8495ad; font-size: .72rem; white-space: nowrap; }
+.ultima-mensagem-contato { display: block; overflow: hidden; margin-top: 3px; color: #788ba8; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.contador-nao-lidas { display: grid; width: 19px; height: 19px; place-items: center; border-radius: 50%; color: #fff; background: #347bf4; font-size: .68rem; }
+
+.estado-vazio-contatos { padding: 15px 8px; color: #7486a1; font-size: .88rem; line-height: 1.5; text-align: center; }
+
+.painel-conversa { display: flex; min-width: 0; min-height: 0; flex-direction: column; background: #fbfdff; }
+.estado-conversa-vazia { display: grid; flex: 1; align-content: center; justify-items: center; padding: 30px; color: #7184a0; text-align: center; }
+.icone-conversa-vazia { display: grid; width: 70px; height: 70px; margin-bottom: 14px; place-items: center; border-radius: 50%; color: #347bf4; background: #edf4ff; font-size: 1.7rem; }
+.estado-conversa-vazia h2 { margin: 0 0 7px; color: #21395e; font-size: 1.15rem; }
+.estado-conversa-vazia p { max-width: 330px; margin: 0; line-height: 1.5; }
+
+.conteudo-conversa { display: flex; min-height: 0; max-height: none; flex: 1; flex-direction: column; }
+.cabecalho-conversa { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #e3ebf5; background: #fff; }
+.avatar-contato-conversa { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #3588fa, #2459e8); font-weight: 700; }
+.cabecalho-conversa h2 { margin: 0; color: #1d3559; font-size: 1rem; }
+.cabecalho-conversa p { margin: 3px 0 0; color: #7b8daa; font-size: .78rem; }
+
+.lista-mensagens { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 12px; overflow-y: auto; padding: 18px; }
+.mensagem-linha { display: flex; max-width: min(82%, 560px); flex-direction: column; align-items: flex-start; gap: 4px; }
+.mensagem-linha.propria { align-self: flex-end; align-items: flex-end; }
+.mensagem-bolha { padding: 10px 13px; border: 1px solid #e4ebf3; border-radius: 15px 15px 15px 4px; color: #253c5e; background: #fff; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+.mensagem-linha.propria .mensagem-bolha { border-color: #347bf4; border-radius: 15px 15px 4px 15px; color: #fff; background: #347bf4; }
+.horario-mensagem { padding: 0 4px; color: #8192aa; font-size: .7rem; }
+.anexo-mensagem { display: inline-flex; max-width: 100%; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid #dce6f2; border-radius: 12px; color: #2b4a76; background: #fff; text-decoration: none; }
+.anexo-mensagem i { color: #347bf4; font-size: 1.15rem; }
+.anexo-mensagem span { overflow: hidden; text-overflow: ellipsis; }
+
+.form-enviar-mensagem { display: flex; align-items: flex-end; gap: 10px; padding: 12px 14px; border-top: 1px solid #e3ebf5; background: #fff; }
+.botao-anexar-mensagem { display: grid; width: 42px; min-width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #5c79a5; background: #f0f5fb; cursor: pointer; }
+.botao-anexar-mensagem:hover { color: #245fe1; background: #e8f0ff; }
+.entrada-mensagem { min-width: 0; flex: 1; }
+.entrada-mensagem textarea { display: block; width: 100%; min-height: 42px; max-height: 120px; resize: vertical; padding: 10px 13px; border: 1px solid #dce6f2; border-radius: 18px; outline: 0; font: inherit; }
+.nome-arquivo-mensagem { margin: 0 0 5px 10px; color: #6d7f9b; font-size: .78rem; }
+.botao-enviar-mensagem { width: 44px; min-width: 44px; height: 44px; border-radius: 50%; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 800px) {
+  .mensagens-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(310px, 45%) minmax(360px, 55%); height: min(82vh, 850px); min-height: 700px; }
+  .painel-contatos-mensagens { min-height: 0; border-right: 0; border-bottom: 1px solid #e2eaf4; }
+  .lista-contatos-mensagens { min-height: 90px; }
+  .painel-conversa, .conteudo-conversa { min-height: 0; }
+  .conteudo-conversa { max-height: none; }
 }
 
-.caixa-chat textarea {
-  resize: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 12px;
-  outline: none;
-  font-family: inherit;
-}
-
-.caixa-chat textarea:focus {
-  border-color: #2563eb;
-}
-
-.caixa-chat button {
-  align-self: flex-end;
-  height: 42px;
+@media (max-width: 480px) {
+  .mensagens-layout { margin-inline: -8px; }
+  .painel-contatos-mensagens { padding: 12px; }
+  .lista-mensagens { padding: 13px; }
+  .mensagem-linha { max-width: 92%; }
+  .form-enviar-mensagem { gap: 7px; padding: 10px; }
 }

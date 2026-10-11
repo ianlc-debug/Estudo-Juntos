@@ -52,6 +52,200 @@
   font-weight: bold;
 }
 
+.item-horario-sala {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 1 280px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.informacao-horario-sala {
+  min-width: 0;
+}
+
+.titulo-horario-sala {
+  color: #334155;
+  font-size: 0.88rem;
+}
+
+.descricao-horario-sala {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.btn-remover-horario {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  background: #fff;
+  color: #b91c1c;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-remover-horario:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.btn-remover-horario:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+.btn-remover-horario:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.btn-anexar-atividade {
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  color: #334155;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-anexar-atividade:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.nome-arquivo-atividade {
+  max-width: min(100%, 420px);
+  overflow: hidden;
+  color: #475569;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cartao-atividade-grupo {
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.meta-atividade-grupo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.meta-atividade-grupo strong {
+  color: #2563eb;
+  font-size: 0.85rem;
+}
+
+.texto-atividade-grupo {
+  margin: 10px 0 0;
+  color: #334155;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.arquivo-atividade-grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.arquivo-atividade-grupo:hover {
+  background: #dbeafe;
+}
+
+.arquivo-atividade-grupo span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arquivo-atividade-grupo small {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.acoes-atividade-grupo {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-remover-atividade-grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-remover-atividade-grupo:hover {
+  border-color: #fee2e2;
+  background: #fef2f2;
+}
+
+.btn-remover-atividade-grupo:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+.btn-remover-atividade-grupo:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.estado-vazio-atividades {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .cartao-post-mural {
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;

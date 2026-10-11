@@ -25,7 +25,7 @@ function criarBotao(texto, cor, acao) {
   return botao;
 }
 
-function adicionarNotificacao({ texto, id, rota, atualizarGrupos = false }) {
+function adicionarNotificacao({ texto, id, rota, atualizarGrupos = false, atualizarMensagens = false, acaoRejeitar = "rejeitar" }) {
   const cartao = document.createElement("article");
   cartao.style.cssText = "border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; background: #f8fafc;";
   const descricao = document.createElement("p");
@@ -33,18 +33,21 @@ function adicionarNotificacao({ texto, id, rota, atualizarGrupos = false }) {
   descricao.textContent = texto;
   const botoes = document.createElement("div");
   botoes.style.cssText = "display: flex; gap: 8px;";
-  botoes.append(criarBotao("Aceitar", "#16a34a", "aceitar"), criarBotao("Rejeitar", "#dc2626", "rejeitar"));
+  botoes.append(
+    criarBotao("Aceitar", "#16a34a", "aceitar"),
+    criarBotao(acaoRejeitar === "recusar" ? "Recusar" : "Rejeitar", "#dc2626", "rejeitar"),
+  );
   botoes.querySelectorAll("button").forEach((botao) => {
-    botao.addEventListener("click", () => responderNotificacao(id, rota, botao.dataset.acao, botoes, atualizarGrupos));
+    botao.addEventListener("click", () => responderNotificacao(id, rota, botao.dataset.acao, botoes, atualizarGrupos, atualizarMensagens, acaoRejeitar));
   });
   cartao.append(descricao, botoes);
   listaNotificacoes?.appendChild(cartao);
 }
 
-function renderizarNotificacoes(convites, solicitacoes) {
+function renderizarNotificacoes(convites, solicitacoes, solicitacoesContato) {
   if (!listaNotificacoes) return;
   listaNotificacoes.replaceChildren();
-  const vazio = convites.length === 0 && solicitacoes.length === 0;
+  const vazio = convites.length === 0 && solicitacoes.length === 0 && solicitacoesContato.length === 0;
   if (textoSemNotificacoes) textoSemNotificacoes.style.display = vazio ? "block" : "none";
   if (iconeSemNotificacoes) iconeSemNotificacoes.style.display = vazio ? "block" : "none";
 
@@ -60,6 +63,14 @@ function renderizarNotificacoes(convites, solicitacoes) {
     rota: `/api/solicitacoes-grupo/${solicitacao.id}/resposta`,
     texto: `${solicitacao.nome_solicitante} (ID ${solicitacao.id_solicitante}) solicitou entrada em ${solicitacao.nome_grupo}. Chave do grupo: ${solicitacao.chave_grupo}.`,
   }));
+
+  solicitacoesContato.forEach((solicitacao) => adicionarNotificacao({
+    id: solicitacao.id,
+    rota: `/api/mensagens/solicitacoes/${solicitacao.id}/responder`,
+    atualizarMensagens: true,
+    acaoRejeitar: "recusar",
+    texto: `${solicitacao.nome_usuario} (ID ${solicitacao.id_publico}) quer adicionar você como contato para iniciar uma conversa privada.`,
+  }));
 }
 
 async function buscarLista(url) {
@@ -73,24 +84,25 @@ async function buscarLista(url) {
 async function carregarNotificacoes() {
   if (!estado.tokenSessao) {
     atualizarContador(0);
-    renderizarNotificacoes([], []);
+    renderizarNotificacoes([], [], []);
     return;
   }
   try {
-    const [convites, solicitacoes] = await Promise.all([
+    const [convites, solicitacoes, solicitacoesContato] = await Promise.all([
       buscarLista("/api/convites"),
       buscarLista("/api/solicitacoes-grupo"),
+      buscarLista("/api/mensagens/solicitacoes"),
     ]);
-    atualizarContador(convites.length + solicitacoes.length);
+    atualizarContador(convites.length + solicitacoes.length + solicitacoesContato.length);
     if (modalNotificacoes && !modalNotificacoes.classList.contains("escondido")) {
-      renderizarNotificacoes(convites, solicitacoes);
+      renderizarNotificacoes(convites, solicitacoes, solicitacoesContato);
     }
   } catch (erro) {
     console.error("Erro ao carregar notificações:", erro);
   }
 }
 
-async function responderNotificacao(id, rota, acao, botoes, atualizarGrupos) {
+async function responderNotificacao(id, rota, acao, botoes, atualizarGrupos, atualizarMensagens, acaoRejeitar) {
   botoes.querySelectorAll("button").forEach((botao) => { botao.disabled = true; });
   try {
     const resposta = await fetch(`http://localhost:3000${rota}`, {
@@ -99,11 +111,12 @@ async function responderNotificacao(id, rota, acao, botoes, atualizarGrupos) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${estado.tokenSessao || ""}`,
       },
-      body: JSON.stringify({ acao }),
+      body: JSON.stringify({ acao: acao === "rejeitar" ? acaoRejeitar : acao }),
     });
     const dados = await resposta.json();
     if (!resposta.ok) throw new Error(dados.erro || "Não foi possível responder à notificação.");
     if (acao === "aceitar" && atualizarGrupos) await carregarGruposDoServidor();
+    if (atualizarMensagens) window.dispatchEvent(new Event("estudo-juntos:contatosatualizados"));
     await carregarNotificacoes();
   } catch (erro) {
     alert(erro.message || "Não foi possível ligar ao servidor.");
@@ -116,12 +129,12 @@ export function inicializarNotificacoes() {
 
   botaoSinoNotificacoes?.addEventListener("click", async () => {
     modalNotificacoes.classList.remove("escondido");
-    renderizarNotificacoes([], []);
+    renderizarNotificacoes([], [], []);
     await carregarNotificacoes();
   });
   botaoFecharNotificacoes?.addEventListener("click", () => modalNotificacoes.classList.add("escondido"));
   modalNotificacoes.addEventListener("click", (evento) => {
     if (evento.target === modalNotificacoes) modalNotificacoes.classList.add("escondido");
   });
-  window.setInterval(carregarNotificacoes, 30000);
+  window.setInterval(carregarNotificacoes, 15000);
 }

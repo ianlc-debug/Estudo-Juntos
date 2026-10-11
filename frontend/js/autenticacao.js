@@ -159,6 +159,13 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
         estado.usuarioAtualId = dados.usuario.id;
         estado.usuarioAtualIdPublico = dados.usuario.id_publico;
         estado.tokenSessao = dados.token;
+        sessionStorage.setItem("estudoJuntosSessao", JSON.stringify({
+          usuarioAtual: estado.usuarioAtual,
+          usuarioAtualEmail: estado.usuarioAtualEmail,
+          usuarioAtualId: estado.usuarioAtualId,
+          usuarioAtualIdPublico: estado.usuarioAtualIdPublico,
+          tokenSessao: estado.tokenSessao,
+        }));
 
         // Carrega os grupos do MySQL assim que o login é efetuado com sucesso
         await carregarGruposDoServidor();
@@ -228,9 +235,12 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     estado.usuarioAtualIdPublico = null;
     estado.tokenSessao = null;
     estado.bancoDeGrupos = {};
+    estado.bancoDeEventos = [];
 
     localStorage.clear();
-    sessionStorage.clear();
+    sessionStorage.removeItem("estudoJuntosSessao");
+    sessionStorage.removeItem("estudoJuntosGrupoAtual");
+    sessionStorage.removeItem("estudoJuntosPosicaoScroll");
 
     // Limpa o hash da URL para evitar reter a última aba aberta no próximo login[cite: 6]
     history.replaceState(null, "", window.location.pathname);
@@ -239,4 +249,38 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     telaPainel.classList.add("escondido");
     telaLogin.classList.remove("escondido");
   });
+
+  // Mantém a sessão ativa se uma ação acidentalmente recarregar a página.
+  if (estado.tokenSessao) {
+    fetch("http://localhost:3000/api/grupos", {
+      headers: { Authorization: `Bearer ${estado.tokenSessao}` },
+    }).then(async (resposta) => {
+      if (!resposta.ok) {
+        if (resposta.status === 401) {
+          estado.usuarioAtual = "ALUNO(A)";
+          estado.usuarioAtualEmail = "";
+          estado.usuarioAtualId = null;
+          estado.usuarioAtualIdPublico = null;
+          estado.tokenSessao = null;
+          sessionStorage.removeItem("estudoJuntosSessao");
+          return;
+        }
+        throw new Error("Não foi possível validar a sessão.");
+      }
+      await carregarGruposDoServidor();
+      if (textoBoasVindas) textoBoasVindas.textContent = `OLÁ, ${estado.usuarioAtual.toUpperCase()}`;
+      if (fotoPerfil) fotoPerfil.textContent = estado.usuarioAtual.charAt(0).toUpperCase();
+      telaLogin.classList.add("escondido");
+      telaPainel.classList.remove("escondido");
+      const grupoSalvo = sessionStorage.getItem("estudoJuntosGrupoAtual");
+      if (grupoSalvo && estado.bancoDeGrupos[grupoSalvo]) {
+        const { abrirSalaDeAula } = await import("./sala-de-aula.js");
+        await abrirSalaDeAula(grupoSalvo);
+      } else {
+        sessionStorage.removeItem("estudoJuntosGrupoAtual");
+        mostrarView("inicio", "inicio");
+      }
+      aoLogarComSucesso?.();
+    }).catch((erro) => console.error("Não foi possível restaurar a sessão:", erro));
+  }
 }
