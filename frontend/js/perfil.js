@@ -2,6 +2,7 @@
 // Preenche a tela "Meu Perfil" e gere as ações da conta com modais flutuantes e ícones SVG modernos para a senha.
 
 import { estado } from "./estado.js";
+import { ativarNomeMaiusculo, normalizarNomeUsuario } from "./nomes-usuario.js";
 
 const botaoNavPerfil = document.getElementById("nav-btn-perfil");
 const botaoExcluirConta = document.getElementById("btn-excluir-conta");
@@ -93,6 +94,8 @@ function abrirModalDinamico(titulo, campos, aoConcluir) {
   overlay.appendChild(cartao);
   document.body.appendChild(overlay);
 
+  ativarNomeMaiusculo(document.getElementById("input-novo-nome"));
+
   // Ativar funcionalidade dos botões de alternância com os ícones SVG modernos
   campos.forEach(c => {
     if (c.tipo === 'password') {
@@ -138,7 +141,7 @@ export function inicializarPerfil() {
         { id: "input-novo-email", label: "E-mail", valor: estado.usuarioAtualEmail || "", placeholder: "Digite o novo e-mail" }
       ],
       async (valores, fecharModal) => {
-        const novoNome = valores["input-novo-nome"].trim();
+        const novoNome = normalizarNomeUsuario(valores["input-novo-nome"]).trim();
         const novoEmail = valores["input-novo-email"].trim();
 
         // Validação estrita: impede campos vazios
@@ -148,9 +151,9 @@ export function inicializarPerfil() {
         }
 
         // Validação estrita do nome: apenas letras e espaços
-        const regexNome = /^[a-zA-ZÀ-ÿ\s]+$/;
+        const regexNome = /^[\p{Lu} ]+$/u;
         if (!regexNome.test(novoNome)) {
-          alert("O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou caracteres especiais).");
+          alert("O nome de usuário deve conter apenas letras maiúsculas e espaços.");
           return;
         }
 

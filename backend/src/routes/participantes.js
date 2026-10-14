@@ -1,5 +1,5 @@
 module.exports = function registrarRotasParticipantes(app, contexto) {
-  const { db, autenticar, crypto, clausulaGrupoPorId, grupoEhPrivado, buscarGrupoDoParticipante } = contexto;
+  const { db, autenticar, crypto, clausulaGrupoPorId, grupoEhPrivado, buscarGrupoDoParticipante, notificarUsuarioMensagens } = contexto;
 
 // O criador começa como administrador; somente administradores podem convidar.
 app.post('/api/grupos/:grupoId/convites', autenticar, async (req, res) => {
@@ -43,6 +43,7 @@ app.post('/api/grupos/:grupoId/convites', autenticar, async (req, res) => {
        VALUES (?, ?, ?, 'pendente')`,
       [grupos[0].id, req.usuario.id, convidadoId]
     );
+    notificarUsuarioMensagens(convidadoId, 'notificacao', { tipo: 'convite-grupo', grupoId: grupos[0].id });
     return res.status(201).json({ mensagem: 'Convite enviado com sucesso.' });
   } catch (erro) {
     console.error('Erro ao enviar convite:', erro);
@@ -283,6 +284,12 @@ app.post('/api/grupos/solicitar-entrada', autenticar, async (req, res) => {
       `INSERT INTO solicitacoes_grupo (grupo_id, solicitante_id, status) VALUES (?, ?, 'pendente')`,
       [grupo.id, req.usuario.id]
     );
+    const [administradores] = await db.promise().query(
+      'SELECT usuario_id FROM grupo_membros WHERE grupo_id = ? AND administrador = 1', [grupo.id]
+    );
+    administradores.forEach(({ usuario_id }) => {
+      notificarUsuarioMensagens(usuario_id, 'notificacao', { tipo: 'solicitacao-grupo', grupoId: grupo.id });
+    });
     return res.status(201).json({ mensagem: 'Solicitação enviada aos administradores do grupo.' });
   } catch (erro) {
     console.error('Erro ao solicitar entrada no grupo privado:', erro);

@@ -9,6 +9,65 @@ const listaNotificacoes = document.getElementById("lista-convites-notificacao");
 const textoSemNotificacoes = document.getElementById("texto-sem-notificacoes");
 const iconeSemNotificacoes = document.getElementById("icone-sem-notificacoes");
 const contadorNotificacoes = document.getElementById("contador-notificacoes");
+let conexaoNotificacoes = null;
+let cicloConexaoNotificacoes = 0;
+
+function pararConexaoNotificacoes() {
+  cicloConexaoNotificacoes += 1;
+  conexaoNotificacoes?.abort();
+  conexaoNotificacoes = null;
+}
+
+function aguardarReconexaoNotificacoes(sinal) {
+  return new Promise((resolver) => {
+    const timer = window.setTimeout(resolver, 2000);
+    sinal.addEventListener("abort", () => {
+      window.clearTimeout(timer);
+      resolver();
+    }, { once: true });
+  });
+}
+
+function conectarNotificacoesEmTempoReal() {
+  if (!estado.tokenSessao || conexaoNotificacoes) return;
+  const token = estado.tokenSessao;
+  const controller = new AbortController();
+  conexaoNotificacoes = controller;
+  const ciclo = ++cicloConexaoNotificacoes;
+
+  (async () => {
+    while (!controller.signal.aborted && ciclo === cicloConexaoNotificacoes && estado.tokenSessao === token) {
+      try {
+        const resposta = await fetch("http://localhost:3000/api/mensagens/tempo-real", {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+        if (resposta.status === 401) break;
+        if (!resposta.ok || !resposta.body) throw new Error("Conexão de notificações indisponível.");
+
+        const leitor = resposta.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (!controller.signal.aborted) {
+          const { value, done } = await leitor.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const eventos = buffer.replace(/\r\n/g, "\n").split("\n\n");
+          buffer = eventos.pop() || "";
+          for (const bloco of eventos) {
+            if (bloco.match(/^event:\s*(.+)$/m)?.[1]?.trim() === "notificacao") {
+              carregarNotificacoes();
+            }
+          }
+        }
+      } catch (erro) {
+        if (erro.name === "AbortError") break;
+      }
+      if (!controller.signal.aborted && estado.tokenSessao === token) await aguardarReconexaoNotificacoes(controller.signal);
+    }
+    if (conexaoNotificacoes === controller) conexaoNotificacoes = null;
+  })();
+}
 
 function atualizarContador(total) {
   if (!contadorNotificacoes) return;
@@ -136,5 +195,20 @@ export function inicializarNotificacoes() {
   modalNotificacoes.addEventListener("click", (evento) => {
     if (evento.target === modalNotificacoes) modalNotificacoes.classList.add("escondido");
   });
+  window.addEventListener("estudo-juntos:sessaoiniciada", () => {
+    pararConexaoNotificacoes();
+    carregarNotificacoes();
+    conectarNotificacoesEmTempoReal();
+  });
+  window.addEventListener("estudo-juntos:sessaoencerrada", () => {
+    pararConexaoNotificacoes();
+    atualizarContador(0);
+    renderizarNotificacoes([], [], []);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) carregarNotificacoes();
+  });
+  carregarNotificacoes();
+  conectarNotificacoesEmTempoReal();
   window.setInterval(carregarNotificacoes, 15000);
 }

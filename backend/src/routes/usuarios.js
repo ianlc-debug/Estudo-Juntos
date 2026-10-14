@@ -1,5 +1,7 @@
 module.exports = function registrarRotasUsuarios(app, contexto) {
   const { db, bcrypt, segredoSessao, gerarIdPublico, garantirIdPublico, criarToken } = contexto;
+  const normalizarNomeUsuario = (valor) => String(valor || '').normalize('NFC').toLocaleUpperCase('pt-BR').normalize('NFC').trim();
+  const nomeUsuarioValido = (valor) => /^[\p{Lu} ]+$/u.test(valor);
 
 // Rota de Teste Inicial
 app.get('/', (req, res) => {
@@ -8,7 +10,8 @@ app.get('/', (req, res) => {
 
 // Rota de Cadastro de Utilizadores
 app.post('/api/registro', async (req, res) => {
-    const { nome_usuario, email, senha } = req.body;
+    const nome_usuario = normalizarNomeUsuario(req.body.nome_usuario);
+    const { email, senha } = req.body;
 
     // 1. Validação de campos obrigatórios
     if (!nome_usuario || !email || !senha) {
@@ -22,10 +25,9 @@ app.post('/api/registro', async (req, res) => {
     }
 
     // 3. Validação de restrições do Nome de Usuário (Apenas letras com acentos e espaços)
-    const regexUsuario = /^[a-zA-ZÀ-ÿ\s]+$/;
-    if (!regexUsuario.test(nome_usuario)) {
+    if (!nomeUsuarioValido(nome_usuario)) {
         return res.status(400).json({ 
-            erro: 'O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou sublinhados).' 
+            erro: 'O nome de usuário deve conter apenas letras maiúsculas e espaços.'
         });
     }
 
@@ -65,7 +67,9 @@ app.post('/api/registro', async (req, res) => {
 
 // Rota de Login de Utilizadores (Aceita E-mail ou Nome de Usuário)
 app.post('/api/login', (req, res) => {
-    const { email, senha } = req.body; // 'email' aqui recebe o valor digitado no campo de identificação
+    const { email, senha } = req.body; // O campo aceita e-mail ou nome de usuário.
+    const identificador = String(email || '').trim();
+    const nomeUsuario = normalizarNomeUsuario(identificador);
 
     if (!segredoSessao) return res.status(500).json({ erro: 'Configure SESSION_SECRET no arquivo .env do servidor.' });
 
@@ -75,9 +79,9 @@ app.post('/api/login', (req, res) => {
     }
 
     // 2. Procurar o utilizador pelo e-mail OU pelo nome de usuário na base de dados
-    const query = 'SELECT * FROM usuarios WHERE email = ? OR nome_usuario = ?';
+    const query = 'SELECT * FROM usuarios WHERE LOWER(email) = LOWER(?) OR nome_usuario = ?';
 
-    db.query(query, [email, email], async (err, resultados) => {
+    db.query(query, [identificador, nomeUsuario], async (err, resultados) => {
         if (err) {
             return res.status(500).json({ erro: 'Erro interno no servidor ao tentar fazer login.' });
         }
@@ -180,19 +184,20 @@ app.post('/api/recuperar-senha', async (req, res) => {
 // Rota para Atualizar Perfil (Nome de Usuário e/ou E-mail)
 app.put('/api/usuarios/:identificador', async (req, res) => {
     const { identificador } = req.params;
-    const { novoNome, novoEmail } = req.body;
+    const novoNomeRecebido = req.body.novoNome;
+    const novoNome = novoNomeRecebido === undefined || novoNomeRecebido === null
+        ? null
+        : normalizarNomeUsuario(novoNomeRecebido);
+    const { novoEmail } = req.body;
 
-    if (!novoNome && !novoEmail) {
+    if (novoNomeRecebido === undefined && !novoEmail) {
         return res.status(400).json({ erro: 'Forneça ao menos um campo para atualizar.' });
     }
 
-    if (novoNome) {
-        const regexUsuario = /^[a-zA-ZÀ-ÿ\s]+$/;
-        if (!regexUsuario.test(novoNome)) {
-            return res.status(400).json({ 
-                erro: 'O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou sublinhados).' 
-            });
-        }
+    if (novoNomeRecebido !== undefined && !nomeUsuarioValido(novoNome || '')) {
+        return res.status(400).json({
+            erro: 'O nome de usuário deve conter apenas letras maiúsculas e espaços.'
+        });
     }
 
     if (novoEmail) {

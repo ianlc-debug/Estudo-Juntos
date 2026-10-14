@@ -1,5 +1,5 @@
 module.exports = function registrarRotasMensagens(app, contexto) {
-  const { db, autenticar, express, fs, crypto, path, pastaUploads, localizarArquivoUpload, usuarioTemContato, sanitizarNomeArquivo, lerFormularioAtividade, notificarUsuarioMensagens } = contexto;
+  const { db, autenticar, express, fs, crypto, path, pastaUploads, localizarArquivoUpload, usuarioTemContato, sanitizarNomeArquivo, lerFormularioAtividade, notificarUsuarioMensagens, conexoesMensagens } = contexto;
 
 app.get('/api/mensagens/tempo-real', autenticar, (req, res) => {
   res.set({
@@ -89,6 +89,7 @@ app.post('/api/mensagens/contatos', autenticar, async (req, res) => {
        VALUES (?, ?, 'pendente')`,
       [req.usuario.id, contato.id]
     );
+    notificarUsuarioMensagens(contato.id, 'notificacao', { tipo: 'contato', id: resultado.insertId });
     return res.status(201).json({ id: resultado.insertId, mensagem: `Solicitação enviada para ${contato.nome_usuario}.` });
   } catch (erro) {
     console.error('Erro ao adicionar contato de mensagens:', erro);
@@ -166,6 +167,21 @@ app.delete('/api/mensagens/contatos/:contatoId', autenticar, async (req, res) =>
       'DELETE FROM contatos_usuarios WHERE (usuario_id = ? AND contato_id = ?) OR (usuario_id = ? AND contato_id = ?)',
       [req.usuario.id, contatoId, contatoId, req.usuario.id]
     );
+    if (!resultado.affectedRows) {
+      await conexao.rollback();
+      return res.status(404).json({ erro: 'Este usuário não está nos seus contatos.' });
+    }
+    const [arquivos] = await conexao.query(
+      `SELECT caminho_arquivo FROM mensagens
+       WHERE caminho_arquivo IS NOT NULL
+         AND ((remetente_id = ? AND destinatario_id = ?) OR (remetente_id = ? AND destinatario_id = ?))`,
+      [req.usuario.id, contatoId, contatoId, req.usuario.id]
+    );
+    await conexao.query(
+      `DELETE FROM mensagens
+       WHERE (remetente_id = ? AND destinatario_id = ?) OR (remetente_id = ? AND destinatario_id = ?)`,
+      [req.usuario.id, contatoId, contatoId, req.usuario.id]
+    );
     await conexao.query(
       `DELETE FROM solicitacoes_contato
        WHERE status = 'pendente'
@@ -173,8 +189,14 @@ app.delete('/api/mensagens/contatos/:contatoId', autenticar, async (req, res) =>
       [req.usuario.id, contatoId, contatoId, req.usuario.id]
     );
     await conexao.commit();
-    if (!resultado.affectedRows) return res.status(404).json({ erro: 'Este usuário não está nos seus contatos.' });
-    return res.json({ mensagem: 'Contato removido. O histórico ficará guardado, mas a conversa ficará indisponível até uma nova solicitação ser aceita.' });
+    await Promise.all(arquivos.map(async ({ caminho_arquivo }) => {
+      try {
+        await fs.unlink(await localizarArquivoUpload(caminho_arquivo));
+      } catch (erroArquivo) {
+        if (erroArquivo.code !== 'ENOENT') console.error('Não foi possível apagar anexo da conversa removida:', erroArquivo);
+      }
+    }));
+    return res.json({ mensagem: 'Contato removido e histórico da conversa apagado permanentemente.' });
   } catch (erro) {
     if (conexao) await conexao.rollback();
     console.error('Erro ao remover contato de mensagens:', erro);

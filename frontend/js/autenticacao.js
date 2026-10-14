@@ -4,6 +4,7 @@
 import { estado } from "./estado.js";
 import { mostrarView } from "./navegacao.js";
 import { carregarGruposDoServidor } from "./grupos.js";
+import { ativarMaiusculas, ativarNomeMaiusculo, normalizarNomeUsuario } from "./nomes-usuario.js";
 
 const telaLogin = document.getElementById("tela-login");
 const telaCadastro = document.getElementById("tela-cadastro");
@@ -65,6 +66,8 @@ function ativarAlternanciaSenha(inputElement) {
 }
 
 export function inicializarAutenticacao(aoLogarComSucesso) {
+  ativarMaiusculas(campoUsuario);
+  ativarNomeMaiusculo(campoRegistoUsuario);
   ativarAlternanciaSenha(campoSenhaLogin);
   ativarAlternanciaSenha(campoRegistoSenha);
   ativarAlternanciaSenha(campoRecuperarSenha);
@@ -97,14 +100,14 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
   formularioRegisto?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const nome_usuario = campoRegistoUsuario.value.trim();
+    const nome_usuario = normalizarNomeUsuario(campoRegistoUsuario.value).trim();
     const email = campoRegistoEmail.value.trim();
     const senha = campoRegistoSenha.value;
 
     // Validação estrita do nome: apenas letras (com acentos) e espaços
-    const regexNome = /^[a-zA-ZÀ-ÿ\s]+$/;
+    const regexNome = /^[\p{Lu} ]+$/u;
     if (!nome_usuario || !regexNome.test(nome_usuario)) {
-      alert("O nome de usuário deve conter apenas letras e espaços (sem números, símbolos ou caracteres especiais).");
+      alert("O nome de usuário deve conter apenas letras maiúsculas e espaços.");
       return;
     }
 
@@ -166,6 +169,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
           usuarioAtualIdPublico: estado.usuarioAtualIdPublico,
           tokenSessao: estado.tokenSessao,
         }));
+        window.dispatchEvent(new Event("estudo-juntos:sessaoiniciada"));
 
         // Carrega os grupos do MySQL assim que o login é efetuado com sucesso
         await carregarGruposDoServidor();
@@ -239,6 +243,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
 
     localStorage.clear();
     sessionStorage.removeItem("estudoJuntosSessao");
+    window.dispatchEvent(new Event("estudo-juntos:sessaoencerrada"));
     sessionStorage.removeItem("estudoJuntosGrupoAtual");
     sessionStorage.removeItem("estudoJuntosPosicaoScroll");
 
@@ -272,6 +277,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
       if (fotoPerfil) fotoPerfil.textContent = estado.usuarioAtual.charAt(0).toUpperCase();
       telaLogin.classList.add("escondido");
       telaPainel.classList.remove("escondido");
+      window.dispatchEvent(new Event("estudo-juntos:sessaoiniciada"));
       const grupoSalvo = sessionStorage.getItem("estudoJuntosGrupoAtual");
       if (grupoSalvo && estado.bancoDeGrupos[grupoSalvo]) {
         const { abrirSalaDeAula } = await import("./sala-de-aula.js");

@@ -192,7 +192,7 @@ async function carregarContatos() {
 }
 
 async function removerContato(contato) {
-  const confirmar = window.confirm(`Remover ${contato.nome_usuario} dos seus contatos? A conversa ficará indisponível até uma nova solicitação ser aceita.`);
+  const confirmar = window.confirm(`Remover ${contato.nome_usuario} dos seus contatos? O histórico da conversa e os arquivos enviados também serão apagados permanentemente.`);
   if (!confirmar) return;
   try {
     const { dados } = await requisitar(`${API}/contatos/${encodeURIComponent(contato.id)}`, { method: "DELETE" });
@@ -220,6 +220,15 @@ function selecionarContato(contato) {
   renderizarContatos();
   carregarMensagens(true);
   campoMensagem?.focus();
+}
+
+function mostrarInicioConversa() {
+  contatoSelecionado = null;
+  ultimaAssinaturaMensagens = "";
+  listaMensagens?.replaceChildren();
+  conteudoConversa?.classList.add("escondido");
+  vazioConversa?.classList.remove("escondido");
+  renderizarContatos();
 }
 
 function criarMensagem(mensagem) {
@@ -260,8 +269,10 @@ function formatarTamanho(bytes) {
 
 async function carregarMensagens(forcar = false) {
   if (!contatoSelecionado || conteudoConversa?.classList.contains("escondido")) return;
+  const contatoId = Number(contatoSelecionado.id);
   try {
-    const { dados } = await requisitar(`${API}/contatos/${encodeURIComponent(contatoSelecionado.id)}/mensagens`);
+    const { dados } = await requisitar(`${API}/contatos/${encodeURIComponent(contatoId)}/mensagens`);
+    if (Number(contatoSelecionado?.id) !== contatoId || conteudoConversa?.classList.contains("escondido")) return;
     const mensagens = Array.isArray(dados) ? dados : [];
     const assinatura = mensagens.map((mensagem) => `${mensagem.id}:${mensagem.texto || ""}:${mensagem.nome_arquivo || ""}`).join("|");
     if (assinatura !== ultimaAssinaturaMensagens || forcar) {
@@ -318,6 +329,12 @@ function atualizarNomeArquivo() {
   nomeArquivoMensagem.classList.toggle("escondido", !arquivo);
 }
 
+function ajustarAlturaCampoMensagem() {
+  if (!campoMensagem) return;
+  campoMensagem.style.height = "42px";
+  campoMensagem.style.height = `${Math.min(campoMensagem.scrollHeight, 120)}px`;
+}
+
 export function inicializarMensagens() {
   if (!formularioContato || !formularioMensagem) return;
 
@@ -348,6 +365,7 @@ export function inicializarMensagens() {
 
   buscaContatos?.addEventListener("input", renderizarContatos);
   arquivoMensagem?.addEventListener("change", atualizarNomeArquivo);
+  campoMensagem?.addEventListener("input", ajustarAlturaCampoMensagem);
 
   formularioMensagem.addEventListener("submit", async (evento) => {
     evento.preventDefault();
@@ -372,6 +390,7 @@ export function inicializarMensagens() {
       }
       await requisitar(`${API}/contatos/${encodeURIComponent(contatoSelecionado.id)}/mensagens`, opcoes);
       campoMensagem.value = "";
+      ajustarAlturaCampoMensagem();
       arquivoMensagem.value = "";
       atualizarNomeArquivo();
       await carregarMensagens(true);
@@ -392,6 +411,7 @@ export function inicializarMensagens() {
 
   window.addEventListener("estudo-juntos:viewchange", (evento) => {
     if (evento.detail?.view === "mensagens") {
+      mostrarInicioConversa();
       ultimaAtualizacaoAuxiliar = Date.now();
       carregarContatos().catch((erro) => definirStatusContato(erro.message, "erro"));
       iniciarTempoReal();
