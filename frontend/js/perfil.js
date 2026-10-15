@@ -165,7 +165,7 @@ export function inicializarPerfil() {
         }
 
         try {
-          const resposta = await fetch(`http://localhost:3000/api/usuarios/${estado.usuarioAtual}`, {
+          const resposta = await fetch(`${window.ESTUDO_API_URL}/api/usuarios/${estado.usuarioAtual}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ novoNome, novoEmail }),
@@ -214,7 +214,7 @@ export function inicializarPerfil() {
         }
 
         try {
-          const resposta = await fetch(`http://localhost:3000/api/usuarios/senha/${estado.usuarioAtual}`, {
+          const resposta = await fetch(`${window.ESTUDO_API_URL}/api/usuarios/senha/${estado.usuarioAtual}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ senhaAtual, novaSenha }),
@@ -248,7 +248,7 @@ export function inicializarPerfil() {
         return;
       }
 
-      const resposta = await fetch(`http://localhost:3000/api/usuarios/${identificador}`, {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/usuarios/${identificador}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

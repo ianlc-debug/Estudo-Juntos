@@ -73,6 +73,7 @@ DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=sua_senha_do_mysql_aqui
 DB_NAME=estudo_juntos
+SESSION_SECRET=uma-chave-longa-e-aleatoria
 
 ```
 
@@ -134,3 +135,26 @@ node index.js
 13. Inicie a API e faça login novamente. O ID público de seis dígitos aparece no perfil e pode ser usado para enviar solicitações de contato na aba “Mensagens”; quem recebe pode aceitar ou recusar. Contatos aceitos podem trocar mensagens de texto e anexar arquivos de até 20 MB. “Meus Grupos” lista apenas os grupos criados pelo usuário; os grupos de que participa aparecem em “Grupos Privados” ou “Grupos Abertos”. Pedidos de entrada em grupos privados são enviados aos administradores pelas notificações; grupos abertos aceitam a entrada imediatamente pelo código. Os anexos são guardados em `backend/uploads/`, uma pasta ignorada pelo Git. Em servidores, configure `UPLOADS_DIR` para apontar a um diretório persistente.
 
 O arquivo `.env` contém credenciais locais e não deve ser compartilhado.
+
+## Compartilhar a plataforma na mesma rede
+
+Para que os cadastros, grupos, mensagens e arquivos sejam compartilhados, apenas um computador deve executar o backend e o banco MySQL. Os demais usuários acessam a interface desse servidor pelo navegador; eles não devem iniciar outro backend nem usar o Live Server em seus próprios computadores.
+
+1. No computador que ficará ligado como servidor, configure o `backend/.env` com o MySQL local (`DB_HOST=localhost`, `DB_NAME=estudo_juntos`) e aplique as migrações do banco listadas acima.
+2. Inicie o backend nesse computador com `node index.js` dentro da pasta `backend` e mantenha o terminal aberto.
+3. No Windows do servidor, execute `ipconfig` e anote o endereço IPv4 da rede local (por exemplo, `192.168.0.25`). Permita o Node.js ou a porta TCP `3000` no Firewall do Windows quando solicitado.
+4. Em cada outro computador conectado à mesma rede, abra `http://IP-DO-SERVIDOR:3000/app/`, substituindo pelo IPv4 anotado.
+
+O backend serve a interface em `/app/` e a API no mesmo servidor, então todos usam o mesmo MySQL e a mesma pasta `backend/uploads`. O servidor precisa permanecer ligado. Para compartilhar entre redes diferentes sem publicar a plataforma na internet, cada pessoa pode entrar numa rede privada Tailscale e acessar a máquina que hospeda o backend.
+
+### Compartilhar entre redes diferentes sem custo mensal
+
+O Tailscale cria uma rede privada entre os computadores. O plano Personal permite até seis usuários sem custo, e o Tailscale Serve pode disponibilizar o backend por HTTPS apenas nessa rede privada.
+
+1. Instale o Tailscale no computador que vai hospedar o backend e no computador de cada participante. Cada pessoa deve usar sua própria conta.
+2. Crie uma rede Tailscale e convide os outros participantes. O plano gratuito Personal permite até seis usuários.
+3. No computador anfitrião, configure o MySQL e o `backend/.env` como na instalação local. Inicie o servidor (`node index.js` na pasta `backend`) e mantenha-o ligado.
+4. No terminal do anfitrião, execute `tailscale serve --bg localhost:3000` e depois `tailscale serve status`. O Tailscale mostrará um endereço HTTPS privado.
+5. Os participantes abrem esse endereço com `/app/` no final. Todos passam a usar o banco e os arquivos do computador anfitrião.
+
+Esse modo não exige que o MySQL fique exposto à internet, mas o computador anfitrião, o backend e o MySQL precisam estar ligados. Contas e arquivos que ficaram em bancos separados não são mesclados automaticamente.

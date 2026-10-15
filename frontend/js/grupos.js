@@ -35,7 +35,7 @@ document.getElementById("nav-btn-grupos")?.addEventListener("click", () => {
 /** Função para carregar os grupos do servidor ao iniciar */
 export async function carregarGruposDoServidor() {
   try {
-    const resposta = await fetch("http://localhost:3000/api/grupos", {
+    const resposta = await fetch(window.ESTUDO_API_URL + "/api/grupos", {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     if (resposta.ok) {
@@ -85,7 +85,7 @@ export async function excluirGrupoDoServidor(idUnicoOuChave) {
   try {
     const identificadorParaExcluir = dadosGrupo.id_unico || dadosGrupo.idBanco || dadosGrupo.id || idUnicoOuChave;
 
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${identificadorParaExcluir}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${identificadorParaExcluir}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
@@ -126,7 +126,7 @@ if (formularioCriarGrupo) {
     };
 
     try {
-      const resposta = await fetch("http://localhost:3000/api/grupos", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/grupos", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify(novoGrupoDados),
@@ -302,7 +302,7 @@ if (formularioEntrarPrivado) {
     const valorCodigo = campoCodigoPrivado.value.trim();
     mensagemErroPrivado.textContent = "";
     try {
-      const resposta = await fetch("http://localhost:3000/api/grupos/solicitar-entrada", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/grupos/solicitar-entrada", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify({ codigo: valorCodigo }),
@@ -325,7 +325,7 @@ if (formularioEntrarPublico) {
     const valorCodigo = campoCodigoPublico.value.trim();
     mensagemErroPublico.textContent = "";
     try {
-      const resposta = await fetch("http://localhost:3000/api/grupos/entrar-aberto", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/grupos/entrar-aberto", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify({ codigo: valorCodigo }),

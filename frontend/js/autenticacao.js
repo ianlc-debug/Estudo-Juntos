@@ -112,7 +112,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     }
 
     try {
-      const resposta = await fetch("http://localhost:3000/api/registro", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome_usuario, email, senha }),
@@ -148,7 +148,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     }
 
     try {
-      const resposta = await fetch("http://localhost:3000/api/login", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: identificador, senha }),
@@ -206,7 +206,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     const novaSenha = campoRecuperarSenha.value;
 
     try {
-      const resposta = await fetch("http://localhost:3000/api/recuperar-senha", {
+      const resposta = await fetch(window.ESTUDO_API_URL + "/api/recuperar-senha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, novaSenha }),
@@ -257,7 +257,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
 
   // Mantém a sessão ativa se uma ação acidentalmente recarregar a página.
   if (estado.tokenSessao) {
-    fetch("http://localhost:3000/api/grupos", {
+    fetch(window.ESTUDO_API_URL + "/api/grupos", {
       headers: { Authorization: `Bearer ${estado.tokenSessao}` },
     }).then(async (resposta) => {
       if (!resposta.ok) {

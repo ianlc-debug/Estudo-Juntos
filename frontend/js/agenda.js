@@ -44,7 +44,7 @@ window.addEventListener("horarios-grupo-atualizados", () => {
 
 async function carregarEventosParticulares() {
   estado.bancoDeEventos = [];
-  const resposta = await fetch("http://localhost:3000/api/eventos-particulares", {
+  const resposta = await fetch(window.ESTUDO_API_URL + "/api/eventos-particulares", {
     headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
   });
   const dados = await lerRespostaAgenda(resposta);
@@ -280,7 +280,7 @@ formularioModalDia?.addEventListener("submit", async (e) => {
   if (botaoEnviar) botaoEnviar.disabled = true;
   try {
     const data = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-    const resposta = await fetch("http://localhost:3000/api/eventos-particulares", {
+    const resposta = await fetch(window.ESTUDO_API_URL + "/api/eventos-particulares", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
       body: JSON.stringify({ titulo, data }),
@@ -302,7 +302,7 @@ async function excluirEventoParticular(evento, botao) {
   if (!confirm(`Remover o evento “${evento.titulo}”?`)) return;
   botao.disabled = true;
   try {
-    const resposta = await fetch(`http://localhost:3000/api/eventos-particulares/${encodeURIComponent(evento.id)}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/eventos-particulares/${encodeURIComponent(evento.id)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });

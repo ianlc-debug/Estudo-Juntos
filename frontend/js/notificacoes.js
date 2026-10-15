@@ -38,7 +38,7 @@ function conectarNotificacoesEmTempoReal() {
   (async () => {
     while (!controller.signal.aborted && ciclo === cicloConexaoNotificacoes && estado.tokenSessao === token) {
       try {
-        const resposta = await fetch("http://localhost:3000/api/mensagens/tempo-real", {
+        const resposta = await fetch(window.ESTUDO_API_URL + "/api/mensagens/tempo-real", {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
@@ -133,7 +133,7 @@ function renderizarNotificacoes(convites, solicitacoes, solicitacoesContato) {
 }
 
 async function buscarLista(url) {
-  const resposta = await fetch(`http://localhost:3000${url}`, {
+  const resposta = await fetch(`${window.ESTUDO_API_URL}${url}`, {
     headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
   });
   if (!resposta.ok) return [];
@@ -164,7 +164,7 @@ async function carregarNotificacoes() {
 async function responderNotificacao(id, rota, acao, botoes, atualizarGrupos, atualizarMensagens, acaoRejeitar) {
   botoes.querySelectorAll("button").forEach((botao) => { botao.disabled = true; });
   try {
-    const resposta = await fetch(`http://localhost:3000${rota}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}${rota}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 import { estado } from "./estado.js";
 
-const API = "http://localhost:3000/api/mensagens";
+const API = window.ESTUDO_API_URL + "/api/mensagens";
 const formularioContato = document.getElementById("form-adicionar-contato");
 const campoIdContato = document.getElementById("campo-id-contato");
 const statusContato = document.getElementById("status-adicionar-contato");

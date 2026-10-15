@@ -74,7 +74,7 @@ async function baixarArquivo(arquivo, botao) {
   botao.disabled = true;
   try {
     const resposta = await fetch(
-      `http://localhost:3000/api/grupos/${encodeURIComponent(arquivo.grupo_id)}/atividades/${encodeURIComponent(arquivo.atividade_id)}/arquivo`,
+      `${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(arquivo.grupo_id)}/atividades/${encodeURIComponent(arquivo.atividade_id)}/arquivo`,
       { headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` } },
     );
     if (!resposta.ok) {
@@ -111,7 +111,7 @@ export async function renderizarRecursos() {
 
   containerRecursos.textContent = "Carregando arquivos dos grupos…";
   try {
-    const resposta = await fetch("http://localhost:3000/api/recursos", {
+    const resposta = await fetch(window.ESTUDO_API_URL + "/api/recursos", {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     const arquivos = await lerRespostaApi(resposta);

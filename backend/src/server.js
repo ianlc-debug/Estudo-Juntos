@@ -39,6 +39,10 @@ async function localizarArquivoUpload(nomeArquivo) {
 
 app.use(cors());
 app.use(express.json());
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+// Servir a interface junto da API permite que todos os membros da rede usem
+// o mesmo servidor e, consequentemente, o mesmo banco e os mesmos arquivos.
+app.use('/app', express.static(path.join(__dirname, '..', '..', 'frontend')));
 
 // Sessões assinadas: o ID do usuário vem do token validado, nunca do corpo enviado pelo navegador.
 const segredoSessao = process.env.SESSION_SECRET;
@@ -126,7 +130,7 @@ function iniciarServidor() {
   console.error('Erro ao processar requisição:', erro);
   return res.status(Number(erro.status) || 500).json({ erro: 'Não foi possível processar a requisição.' });
 });
-  app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
+  app.listen(port, '0.0.0.0', () => console.log(`Servidor rodando na porta ${port}`));
 }
 
 module.exports = { app, iniciarServidor };

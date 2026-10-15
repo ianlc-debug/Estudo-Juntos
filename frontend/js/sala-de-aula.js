@@ -125,7 +125,7 @@ export async function atualizarContadorMembros() {
   const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
   if (!dadosGrupo || !contadorMembrosSala) return;
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     if (!resposta.ok) return;
@@ -196,7 +196,7 @@ async function removerHorarioDoGrupo(idHorario, botao) {
   if (!dadosGrupo || !dadosGrupo.ehAdministrador) return;
   botao.disabled = true;
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/horarios/${encodeURIComponent(idHorario)}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/horarios/${encodeURIComponent(idHorario)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
@@ -307,7 +307,7 @@ async function carregarAtividadesDoGrupo() {
   if (!dadosGrupo || !listaTarefasSala) return;
   listaTarefasSala.textContent = "Carregando atividades…";
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades`, {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     const atividades = await lerRespostaApi(resposta);
@@ -325,7 +325,7 @@ async function carregarAtividadesDoGrupo() {
 async function baixarArquivoAtividade(evento, atividade, dadosGrupo) {
   evento.preventDefault();
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/${encodeURIComponent(atividade.id)}/arquivo`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/${encodeURIComponent(atividade.id)}/arquivo`, {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     if (!resposta.ok) {
@@ -349,7 +349,7 @@ async function removerAtividadeDoGrupo(atividade, dadosGrupo, botao) {
   if (!confirm("Remover esta publicação e o arquivo anexado, se houver? Esta ação não pode ser desfeita.")) return;
   botao.disabled = true;
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/${encodeURIComponent(atividade.id)}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/${encodeURIComponent(atividade.id)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
@@ -444,7 +444,7 @@ async function carregarRecadosDoGrupo() {
   if (!dadosGrupo || !feedRecadosSala) return;
   feedRecadosSala.textContent = "Carregando mural…";
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural`, {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     const recados = await lerRespostaApi(resposta);
@@ -461,7 +461,7 @@ async function excluirRecadoDoMural(recado, dadosGrupo, botao) {
   if (!confirm("Excluir este recado do mural?")) return;
   botao.disabled = true;
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural/${encodeURIComponent(recado.id)}`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural/${encodeURIComponent(recado.id)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
@@ -484,7 +484,7 @@ async function carregarParticipantesDoGrupo() {
   if (listaMembrosSala) listaMembrosSala.textContent = "Carregando participantes…";
 
   try {
-    const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/participantes`, {
       headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
     });
     const dados = await resposta.json();
@@ -522,7 +522,7 @@ async function carregarParticipantesDoGrupo() {
             if (confirmacao && !confirm(confirmacao)) return;
             botao.disabled = true;
             try {
-              const respostaAcao = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}${rota}`, {
+              const respostaAcao = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}${rota}`, {
                 method: metodo,
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
                 body: JSON.stringify({ idPublico: participante.id_publico }),
@@ -572,7 +572,7 @@ if (botaoSairGrupo) {
     const controlador = new AbortController();
     const temporizador = window.setTimeout(() => controlador.abort(), 15000);
     try {
-      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/sair`, {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/sair`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
         signal: controlador.signal,
@@ -638,7 +638,7 @@ if (formularioConviteGrupo) {
     }
 
     try {
-      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/convites`, {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/convites`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -685,7 +685,7 @@ if (botaoEnviarRecado && campoRecadoSala) {
     botaoEnviarRecado.disabled = true;
     botaoEnviarRecado.textContent = "Publicando…";
     try {
-      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural`, {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify({ texto }),
@@ -740,13 +740,13 @@ if (botaoPublicarTarefa) {
         const formulario = new FormData();
         formulario.append("texto", texto);
         formulario.append("arquivo", arquivo, arquivo.name);
-        resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/arquivo`, {
+        resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/arquivo`, {
           method: "POST",
           headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
           body: formulario,
         });
       } else {
-        resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades`, {
+        resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
           body: JSON.stringify({ texto }),
@@ -797,7 +797,7 @@ if (botaoAdicionarHorario) {
     }
     botaoAdicionarHorario.disabled = true;
     try {
-      const resposta = await fetch(`http://localhost:3000/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/horarios`, {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/horarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
         body: JSON.stringify({ dia, inicio: `${horaInicio}:00`, fim: `${horaFim}:00` }),
