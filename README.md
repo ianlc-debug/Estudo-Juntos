@@ -108,11 +108,13 @@ node index.js
 ## Endpoints Disponíveis
 
 * **`GET /`**
-* **Descrição:** Rota de teste inicial para verificar se a API está online.
+* **Descrição:** Abre a interface da plataforma em `/app/`.
+* **`GET /health`**
+* **Descrição:** Verifica se o servidor está online.
 * **Retorno esperado (JSON):**
 ```json
 {
-  "mensagem": "API rodando com sucesso!"
+  "status": "ok"
 }
 
 ```
@@ -158,3 +160,16 @@ O Tailscale cria uma rede privada entre os computadores. O plano Personal permit
 5. Os participantes abrem esse endereço com `/app/` no final. Todos passam a usar o banco e os arquivos do computador anfitrião.
 
 Esse modo não exige que o MySQL fique exposto à internet, mas o computador anfitrião, o backend e o MySQL precisam estar ligados. Contas e arquivos que ficaram em bancos separados não são mesclados automaticamente.
+
+## Hospedar para a equipe sem depender de um computador pessoal
+
+Para esta aplicação, Railway é a opção mais simples: o mesmo serviço Node entrega a interface e a API, enquanto um serviço MySQL guarda os dados. Isso mantém o chat SSE no mesmo processo, evita configurar CORS entre provedores e fornece um domínio HTTPS. O Dockerfile na raiz já inclui o backend e a pasta `frontend`; a raiz redireciona para `/app/`.
+
+1. Envie as alterações do repositório para o GitHub. O arquivo `backend/.env` não deve ser enviado; ele é ignorado pelo Git.
+2. No Railway, crie um projeto a partir do repositório `Estudo-Juntos`, mantendo a raiz do repositório como diretório de origem para o Dockerfile.
+3. Adicione um serviço MySQL ao projeto. Confirme que há um volume persistente no serviço e que `MYSQLDATABASE` está como `estudo_juntos`, nome usado por `backend/database/scheme.sql`. Mantenha o banco privado e conecte-o ao backend usando as variáveis `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD` e `MYSQLDATABASE` do serviço MySQL.
+4. No serviço do backend, configure `SESSION_SECRET` com uma chave aleatória longa e `UPLOADS_DIR=/data/uploads`. Crie um volume persistente montado em `/data` para que anexos não desapareçam após uma nova publicação.
+5. Antes de usar a plataforma, importe o banco. Para uma instalação vazia, use `backend/database/scheme.sql`; para manter os dados locais, exporte o banco `estudo_juntos` pelo MySQL Workbench e importe a cópia no MySQL hospedado. Não compartilhe o arquivo de exportação nem as credenciais.
+6. Configure `/health` como rota de verificação do serviço e gere um domínio público para o backend. O Railway fornece HTTPS automaticamente; compartilhe o domínio com a equipe.
+
+O backend deve ficar com uma única réplica, porque as conexões SSE de mensagens são mantidas em memória no processo. O MySQL não deve ser exposto publicamente para o uso normal da plataforma. Antes de ativar um plano pago, confira o valor e o limite de uso na conta Railway.

@@ -5,7 +5,7 @@ module.exports = function registrarRotasUsuarios(app, contexto) {
 
 // Rota de Teste Inicial
 app.get('/', (req, res) => {
-    res.json({ mensagem: 'API rodando com sucesso!' });
+    res.redirect('/app/');
 });
 
 // Rota de Cadastro de Utilizadores
