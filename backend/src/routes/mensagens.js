@@ -36,15 +36,21 @@ app.get('/api/mensagens/contatos', autenticar, async (req, res) => {
                  AND m_nao_lidas.destinatario_id = ? AND m_nao_lidas.lida_em IS NULL) AS nao_lidas
        FROM contatos_usuarios c
        JOIN usuarios u ON u.id = c.contato_id
-       LEFT JOIN mensagens ultima ON ultima.id = (
-         SELECT m.id FROM mensagens m
-         WHERE (m.remetente_id = ? AND m.destinatario_id = u.id)
-            OR (m.remetente_id = u.id AND m.destinatario_id = ?)
-         ORDER BY m.criado_em DESC, m.id DESC LIMIT 1
-       )
+       LEFT JOIN (
+         SELECT mensagem.*, ROW_NUMBER() OVER (
+           PARTITION BY mensagem.contato_id
+           ORDER BY mensagem.criado_em DESC, mensagem.id DESC
+         ) AS numero_linha
+         FROM (
+           SELECT m.*,
+                  CASE WHEN m.remetente_id = ? THEN m.destinatario_id ELSE m.remetente_id END AS contato_id
+           FROM mensagens m
+           WHERE m.remetente_id = ? OR m.destinatario_id = ?
+         ) mensagem
+       ) ultima ON ultima.contato_id = u.id AND ultima.numero_linha = 1
        WHERE c.usuario_id = ?
        ORDER BY COALESCE(ultima.criado_em, c.criado_em) DESC, u.nome_usuario ASC`,
-      [req.usuario.id, req.usuario.id, req.usuario.id, req.usuario.id]
+      [req.usuario.id, req.usuario.id, req.usuario.id, req.usuario.id, req.usuario.id]
     );
     return res.json(contatos);
   } catch (erro) {
