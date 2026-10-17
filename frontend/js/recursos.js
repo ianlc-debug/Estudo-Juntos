@@ -1,5 +1,5 @@
 // recursos.js
-// Lista os arquivos anexados às publicações dos grupos do usuário.
+// Lista os arquivos anexados às atividades e ao mural dos grupos do usuário.
 
 import { estado } from "./estado.js";
 
@@ -55,6 +55,7 @@ function criarCartaoArquivo(arquivo) {
     : "";
   detalhes.textContent = [
     arquivo.autor ? `Enviado por ${arquivo.autor}` : "",
+    arquivo.origem === "mural" ? "Mural do grupo" : "Quadro de atividades",
     dataTexto,
     formatarTamanho(arquivo.tamanho_arquivo),
   ].filter(Boolean).join(" • ");
@@ -73,8 +74,11 @@ function criarCartaoArquivo(arquivo) {
 async function baixarArquivo(arquivo, botao) {
   botao.disabled = true;
   try {
+    const rotaArquivo = arquivo.origem === "mural"
+      ? `mural/${encodeURIComponent(arquivo.recado_id)}/arquivo`
+      : `atividades/${encodeURIComponent(arquivo.atividade_id)}/arquivo`;
     const resposta = await fetch(
-      `${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(arquivo.grupo_id)}/atividades/${encodeURIComponent(arquivo.atividade_id)}/arquivo`,
+      `${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(arquivo.grupo_id)}/${rotaArquivo}`,
       { headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` } },
     );
     if (!resposta.ok) {

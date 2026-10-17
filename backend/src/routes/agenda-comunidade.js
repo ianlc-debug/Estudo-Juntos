@@ -266,8 +266,9 @@ app.get('/api/grupos/:grupoId/atividades', autenticar, async (req, res) => {
 // Lista os arquivos das publicações em todos os grupos do usuário autenticado.
 app.get('/api/recursos', autenticar, async (req, res) => {
   try {
-    const [arquivos] = await db.promise().query(
-      `SELECT a.id AS atividade_id, a.nome_arquivo, a.tipo_arquivo, a.tamanho_arquivo,
+    const [arquivosAtividades] = await db.promise().query(
+      `SELECT a.id AS arquivo_id, a.id AS atividade_id, NULL AS recado_id, 'atividade' AS origem,
+              a.nome_arquivo, a.tipo_arquivo, a.tamanho_arquivo,
               a.criado_em, a.texto, a.autor_id, u.nome_usuario AS autor,
               g.id_unico AS grupo_id, g.nome AS grupo_nome
        FROM grupo_atividades a
@@ -278,6 +279,19 @@ app.get('/api/recursos', autenticar, async (req, res) => {
        ORDER BY g.nome, a.criado_em DESC, a.id DESC`,
       [req.usuario.id]
     );
+    const [arquivosMural] = await db.promise().query(
+      `SELECT r.id AS arquivo_id, NULL AS atividade_id, r.id AS recado_id, 'mural' AS origem,
+              r.nome_arquivo, r.tipo_arquivo, r.tamanho_arquivo,
+              r.criado_em, r.texto, r.autor_id, u.nome_usuario AS autor,
+              g.id_unico AS grupo_id, g.nome AS grupo_nome
+       FROM grupo_recados r
+       JOIN grupos g ON g.id = r.grupo_id
+       JOIN grupo_membros gm ON gm.grupo_id = g.id AND gm.usuario_id = ?
+       JOIN usuarios u ON u.id = r.autor_id
+       WHERE r.caminho_arquivo IS NOT NULL AND r.nome_arquivo IS NOT NULL`,
+      [req.usuario.id]
+    );
+    const arquivos = [...arquivosAtividades, ...arquivosMural].sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
     return res.json(arquivos);
   } catch (erro) {
     console.error('Erro ao carregar recursos dos grupos:', erro);

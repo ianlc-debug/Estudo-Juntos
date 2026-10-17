@@ -1,13 +1,20 @@
 module.exports = function registrarRotasAtividades(app, contexto) {
   const { db, autenticar, express, fs, crypto, path, pastaUploads, localizarArquivoUpload, buscarGrupoDoParticipante, sanitizarNomeArquivo, lerFormularioAtividade } = contexto;
 
+function prazoValido(valor) {
+  if (typeof valor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
+  const [ano, mes, dia] = valor.split('-').map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia;
+}
+
 // Somente administradores publicam atividades; todos os participantes podem consultá-las.
 app.post('/api/grupos/:grupoId/atividades', autenticar, async (req, res) => {
   const texto = String(req.body.texto || '').trim();
   const prazo = req.body.prazo || null;
-  if (!texto) return res.status(400).json({ erro: 'Escreva um texto ou anexe um arquivo.' });
+  if (!texto) return res.status(400).json({ erro: 'Informe o nome da atividade.' });
   if (texto.length > 5000) return res.status(400).json({ erro: 'O texto pode ter até 5.000 caracteres.' });
-  if (prazo && !/^\d{4}-\d{2}-\d{2}$/.test(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido.' });
+  if (!prazoValido(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido para a atividade.' });
   try {
     const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
     if (!grupo) return res.status(403).json({ erro: 'Somente participantes podem publicar neste grupo.' });
@@ -34,10 +41,11 @@ app.post('/api/grupos/:grupoId/atividades/arquivo', autenticar, express.raw({ ty
   const texto = String(formulario.texto || '').trim();
   const arquivo = formulario.arquivo;
   const prazo = formulario.prazo || null;
+  if (!texto) return res.status(400).json({ erro: 'Informe o nome da atividade.' });
+  if (!prazoValido(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido para a atividade.' });
   if (!arquivo?.conteudo?.length) return res.status(400).json({ erro: 'Selecione um arquivo válido.' });
   if (arquivo.conteudo.length > 20_000_000) return res.status(413).json({ erro: 'O arquivo deve ter no máximo 20 MB.' });
   if (texto.length > 5000) return res.status(400).json({ erro: 'O texto pode ter até 5.000 caracteres.' });
-  if (prazo && !/^\d{4}-\d{2}-\d{2}$/.test(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido.' });
   try {
     const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
     if (!grupo) return res.status(403).json({ erro: 'Somente participantes podem publicar neste grupo.' });

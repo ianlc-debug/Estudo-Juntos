@@ -831,7 +831,8 @@
                       id="campo-tarefa-sala"
                       rows="3"
                       maxlength="5000"
-                      placeholder="Escreva uma atividade ou descrição (opcional se anexar um arquivo)..."
+                      placeholder="Nome da atividade e descrição..."
+                      required
                       style="
                         width: 100%;
                         min-height: 84px;
@@ -843,7 +844,7 @@
                         font: inherit;
                       "
                     ></textarea>
-                    <input type="date" id="campo-prazo-atividade" aria-label="Prazo da atividade" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; align-self: flex-start;" />
+                    <input type="date" id="campo-prazo-atividade" aria-label="Prazo da atividade" required style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; align-self: flex-start;" />
                     <input type="file" id="campo-arquivo-atividade" hidden />
 
                     <div

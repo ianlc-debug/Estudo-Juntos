@@ -797,8 +797,8 @@ if (botaoPublicarTarefa) {
     const texto = campoTarefaSala?.value.trim() || "";
     const arquivo = campoArquivoAtividade?.files?.[0] || null;
     const prazo = campoPrazoAtividade?.value || null;
-    if (!dadosGrupo || (!texto && !arquivo)) {
-      alert("Escreva um texto ou anexe um arquivo para publicar.");
+    if (!dadosGrupo || !texto || !prazo) {
+      alert("Informe o nome e o prazo da atividade. O arquivo é opcional.");
       return;
     }
     if (arquivo && arquivo.size > 20_000_000) {
