@@ -4,6 +4,7 @@
 
 import { estado, diasDaSemana } from "./estado.js";
 import { mostrarView } from "./navegacao.js";
+import { renderizarTarefasGlobais } from "./inicio.js";
 
 const botaoNavAgenda = document.getElementById("nav-btn-agenda");
 const selectMes = document.getElementById("select-mes-agenda");
@@ -24,7 +25,7 @@ async function abrirAgendaNoMesAtual() {
   const mesAtual = new Date().getMonth();
   selectMes.value = mesAtual;
   try {
-    await carregarEventosParticulares();
+    await Promise.all([carregarEventosParticulares(), carregarPrazosAtividades()]);
   } catch (erro) {
     alert(erro.message || "Não foi possível carregar seus eventos.");
   }
@@ -41,6 +42,20 @@ selectMes?.addEventListener("change", (e) => {
 window.addEventListener("horarios-grupo-atualizados", () => {
   if (selectMes) renderizarCalendario(parseInt(selectMes.value));
 });
+window.addEventListener("prazos-agenda-atualizados", () => { void atualizarPrazosAgenda(); });
+window.addEventListener("eventos-particulares-atualizados", () => {
+  void carregarEventosParticulares().then(() => {
+    if (selectMes) renderizarCalendario(parseInt(selectMes.value));
+    if (modalDetalhesDia && !modalDetalhesDia.classList.contains("escondido")) renderizarEventosDoDia();
+  });
+});
+
+async function atualizarPrazosAgenda() {
+  try { await carregarPrazosAtividades(); }
+  catch (erro) { console.error("Erro ao atualizar prazos do calendário:", erro); }
+  if (selectMes) renderizarCalendario(parseInt(selectMes.value));
+  if (modalDetalhesDia && !modalDetalhesDia.classList.contains("escondido")) renderizarEventosDoDia();
+}
 
 async function carregarEventosParticulares() {
   estado.bancoDeEventos = [];
@@ -51,7 +66,19 @@ async function carregarEventosParticulares() {
   if (!resposta.ok) throw new Error(dados.erro || "Não foi possível carregar seus eventos.");
   estado.bancoDeEventos = dados.map((evento) => {
     const [ano, mes, dia] = evento.data_evento.split("-").map(Number);
-    return { id: evento.id, titulo: evento.titulo, dia, mes: mes - 1, ano };
+    return { id: evento.id, titulo: evento.titulo, concluida: Boolean(Number(evento.concluida)), dia, mes: mes - 1, ano };
+  });
+}
+
+async function carregarPrazosAtividades() {
+  const resposta = await fetch(`${window.ESTUDO_API_URL}/api/agenda-atividades`, {
+    headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+  });
+  const atividades = await lerRespostaAgenda(resposta);
+  if (!resposta.ok) throw new Error(atividades.erro || "Não foi possível carregar os prazos.");
+  estado.bancoDePrazos = atividades.map((atividade) => {
+    const [ano, mes, dia] = atividade.prazo.split("-").map(Number);
+    return { ...atividade, dia, mes: mes - 1, ano, concluida: Boolean(Number(atividade.concluida)) };
   });
 }
 
@@ -162,6 +189,16 @@ export function renderizarCalendario(indiceMes) {
       }
     });
 
+    estado.bancoDePrazos.forEach((atividade) => {
+      if (atividade.dia === dia && atividade.mes === indiceMes && atividade.ano === anoAtual) {
+        const selo = document.createElement("div");
+        const vencida = atividade.prazo < new Date().toISOString().slice(0, 10);
+        selo.style.cssText = `background:${atividade.concluida ? "#10b981" : vencida ? "#ef4444" : "#f59e0b"}; color:white; font-size:.7rem; padding:2px 4px; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none;`;
+        selo.textContent = `📚 ${atividade.texto || "Atividade"}`;
+        celulaDia.appendChild(selo);
+      }
+    });
+
     celulaDia.addEventListener("click", () => {
       abrirModalDetalhesDia(dia, indiceMes, anoAtual);
     });
@@ -218,6 +255,12 @@ function renderizarEventosDoDia() {
     }
   });
 
+  estado.bancoDePrazos.forEach((atividade) => {
+    if (atividade.dia === dia && atividade.mes === mes && atividade.ano === ano) {
+      todosOsEventosDoDia.push({ tipo: "atividade", titulo: atividade.texto || "Atividade do grupo", descricao: `Grupo: ${atividade.grupo_nome}`, objetoOriginal: atividade });
+    }
+  });
+
   if (todosOsEventosDoDia.length === 0) {
     listaEventosModalDia.innerHTML = `<p style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-top: 10px;">Nenhum evento para este dia.</p>`;
     return;
@@ -243,6 +286,25 @@ function renderizarEventosDoDia() {
                     </div>
                     <span style="font-size: 0.7rem; background: #dbeafe; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Fixo</span>
                 `;
+    } else if (evento.tipo === "atividade") {
+      itemEvento.style.borderLeft = "4px solid #f59e0b";
+      const bloco = document.createElement("div");
+      const titulo = document.createElement("strong");
+      titulo.textContent = `📚 ${evento.titulo}`;
+      const descricao = document.createElement("small");
+      descricao.textContent = `${evento.descricao} • Prazo ${evento.objetoOriginal.prazo.split("-").reverse().join("/")}`;
+      descricao.style.cssText = "display:block; color:#64748b;";
+      bloco.append(titulo, descricao);
+      itemEvento.appendChild(bloco);
+      if (evento.objetoOriginal.prazo < new Date().toISOString().slice(0, 10)) {
+        const ocultar = document.createElement("button");
+        ocultar.type = "button";
+        ocultar.className = "btn-excluir";
+        ocultar.textContent = "Ocultar da agenda";
+        ocultar.style.cssText = "flex:0 0 auto; background:#64748b; color:white; border:0; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:.75rem;";
+        ocultar.addEventListener("click", () => { void ocultarPrazoDaAgenda(evento.objetoOriginal, ocultar); });
+        itemEvento.appendChild(ocultar);
+      }
     } else {
       itemEvento.style.borderLeft = "4px solid #10b981";
       const titulo = document.createElement("span");
@@ -254,7 +316,15 @@ function renderizarEventosDoDia() {
       botaoExcluir.textContent = "Excluir";
       botaoExcluir.style.cssText = "flex: 0 0 auto; background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem;";
       botaoExcluir.addEventListener("click", () => { void excluirEventoParticular(evento.objetoOriginal, botaoExcluir); });
-      itemEvento.append(titulo, botaoExcluir);
+      const acoes = document.createElement("div");
+      acoes.style.cssText = "display:flex; align-items:center; gap:6px;";
+      const concluir = document.createElement("input");
+      concluir.type = "checkbox";
+      concluir.checked = evento.objetoOriginal.concluida;
+      concluir.title = "Marcar evento como concluído";
+      concluir.addEventListener("change", () => { void marcarEventoConcluido(evento.objetoOriginal, concluir); });
+      acoes.append(concluir, botaoExcluir);
+      itemEvento.append(titulo, acoes);
     }
 
     listaEventosModalDia.appendChild(itemEvento);
@@ -291,6 +361,7 @@ formularioModalDia?.addEventListener("submit", async (e) => {
     campoModalDia.value = "";
     renderizarEventosDoDia();
     renderizarCalendario(mes);
+    renderizarTarefasGlobais();
   } catch (erro) {
     alert(erro.message || "Não foi possível salvar o evento.");
   } finally {
@@ -311,8 +382,48 @@ async function excluirEventoParticular(evento, botao) {
     estado.bancoDeEventos = estado.bancoDeEventos.filter((item) => String(item.id) !== String(evento.id));
     renderizarEventosDoDia();
     renderizarCalendario(estado.dataSelecionada.mes);
+    renderizarTarefasGlobais();
   } catch (erro) {
     alert(erro.message || "Não foi possível remover o evento.");
     botao.disabled = false;
+  }
+}
+
+async function marcarEventoConcluido(evento, controle) {
+  controle.disabled = true;
+  try {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/eventos-particulares/${evento.id}/concluida`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+      body: JSON.stringify({ concluida: controle.checked }),
+    });
+    const resultado = await lerRespostaAgenda(resposta);
+    if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível atualizar o evento.");
+    evento.concluida = controle.checked;
+    renderizarEventosDoDia();
+    renderizarCalendario(estado.dataSelecionada.mes);
+    renderizarTarefasGlobais();
+  } catch (erro) {
+    controle.checked = !controle.checked;
+    alert(erro.message || "Não foi possível atualizar o evento.");
+  } finally { controle.disabled = false; }
+}
+
+async function ocultarPrazoDaAgenda(atividade, botao) {
+  botao.disabled = true;
+  try {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(atividade.grupo_id)}/atividades/${atividade.id}/estado`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+      body: JSON.stringify({ ocultar_calendario: true }),
+    });
+    const resultado = await lerRespostaAgenda(resposta);
+    if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível ocultar o prazo.");
+    estado.bancoDePrazos = estado.bancoDePrazos.filter((item) => String(item.id) !== String(atividade.id));
+    renderizarEventosDoDia();
+    renderizarCalendario(estado.dataSelecionada.mes);
+  } catch (erro) {
+    botao.disabled = false;
+    alert(erro.message || "Não foi possível ocultar o prazo.");
   }
 }

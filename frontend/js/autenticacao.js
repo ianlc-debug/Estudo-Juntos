@@ -240,6 +240,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
     estado.tokenSessao = null;
     estado.bancoDeGrupos = {};
     estado.bancoDeEventos = [];
+      estado.bancoDePrazos = [];
 
     localStorage.clear();
     sessionStorage.removeItem("estudoJuntosSessao");

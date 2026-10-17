@@ -1,19 +1,22 @@
 module.exports = function registrarRotasAtividades(app, contexto) {
   const { db, autenticar, express, fs, crypto, path, pastaUploads, localizarArquivoUpload, buscarGrupoDoParticipante, sanitizarNomeArquivo, lerFormularioAtividade } = contexto;
 
-// Qualquer participante pode publicar texto. Neste caminho não há anexo.
+// Somente administradores publicam atividades; todos os participantes podem consultá-las.
 app.post('/api/grupos/:grupoId/atividades', autenticar, async (req, res) => {
   const texto = String(req.body.texto || '').trim();
+  const prazo = req.body.prazo || null;
   if (!texto) return res.status(400).json({ erro: 'Escreva um texto ou anexe um arquivo.' });
   if (texto.length > 5000) return res.status(400).json({ erro: 'O texto pode ter até 5.000 caracteres.' });
+  if (prazo && !/^\d{4}-\d{2}-\d{2}$/.test(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido.' });
   try {
     const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
     if (!grupo) return res.status(403).json({ erro: 'Somente participantes podem publicar neste grupo.' });
+    if (Number(grupo.administrador) !== 1) return res.status(403).json({ erro: 'Somente administradores podem publicar atividades.' });
     const [resultado] = await db.promise().query(
-      'INSERT INTO grupo_atividades (grupo_id, autor_id, texto) VALUES (?, ?, ?)',
-      [grupo.id, req.usuario.id, texto]
+      'INSERT INTO grupo_atividades (grupo_id, autor_id, texto, prazo) VALUES (?, ?, ?, ?)',
+      [grupo.id, req.usuario.id, texto, prazo]
     );
-    return res.status(201).json({ id: resultado.insertId, mensagem: 'Atividade publicada.' });
+    return res.status(201).json({ id: resultado.insertId, prazo, mensagem: 'Atividade publicada.' });
   } catch (erro) {
     console.error('Erro ao publicar atividade:', erro);
     return res.status(500).json({ erro: 'Não foi possível publicar a atividade.' });
@@ -30,12 +33,15 @@ app.post('/api/grupos/:grupoId/atividades/arquivo', autenticar, express.raw({ ty
   }
   const texto = String(formulario.texto || '').trim();
   const arquivo = formulario.arquivo;
+  const prazo = formulario.prazo || null;
   if (!arquivo?.conteudo?.length) return res.status(400).json({ erro: 'Selecione um arquivo válido.' });
   if (arquivo.conteudo.length > 20_000_000) return res.status(413).json({ erro: 'O arquivo deve ter no máximo 20 MB.' });
   if (texto.length > 5000) return res.status(400).json({ erro: 'O texto pode ter até 5.000 caracteres.' });
+  if (prazo && !/^\d{4}-\d{2}-\d{2}$/.test(prazo)) return res.status(400).json({ erro: 'Informe um prazo válido.' });
   try {
     const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
     if (!grupo) return res.status(403).json({ erro: 'Somente participantes podem publicar neste grupo.' });
+    if (Number(grupo.administrador) !== 1) return res.status(403).json({ erro: 'Somente administradores podem publicar atividades.' });
     await fs.mkdir(pastaUploads, { recursive: true });
     const nomeArmazenado = `${crypto.randomUUID()}.bin`;
     const caminhoArquivo = path.join(pastaUploads, nomeArmazenado);
@@ -43,11 +49,11 @@ app.post('/api/grupos/:grupoId/atividades/arquivo', autenticar, express.raw({ ty
     try {
       const [resultado] = await db.promise().query(
         `INSERT INTO grupo_atividades
-           (grupo_id, autor_id, texto, nome_arquivo, caminho_arquivo, tipo_arquivo, tamanho_arquivo)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [grupo.id, req.usuario.id, texto || null, sanitizarNomeArquivo(arquivo.nome), nomeArmazenado, String(arquivo.tipo || 'application/octet-stream').slice(0, 150), arquivo.conteudo.length]
+           (grupo_id, autor_id, texto, nome_arquivo, caminho_arquivo, tipo_arquivo, tamanho_arquivo, prazo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [grupo.id, req.usuario.id, texto || null, sanitizarNomeArquivo(arquivo.nome), nomeArmazenado, String(arquivo.tipo || 'application/octet-stream').slice(0, 150), arquivo.conteudo.length, prazo]
       );
-      return res.status(201).json({ id: resultado.insertId, mensagem: 'Atividade publicada com arquivo.' });
+      return res.status(201).json({ id: resultado.insertId, prazo, mensagem: 'Atividade publicada com arquivo.' });
     } catch (erroBanco) {
       await fs.unlink(caminhoArquivo).catch(() => {});
       throw erroBanco;
@@ -62,6 +68,7 @@ app.delete('/api/grupos/:grupoId/atividades/:atividadeId', autenticar, async (re
   try {
     const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
     if (!grupo) return res.status(403).json({ erro: 'Você não participa deste grupo.' });
+    if (Number(grupo.administrador) !== 1) return res.status(403).json({ erro: 'Somente administradores podem remover atividades do quadro.' });
     const [atividades] = await db.promise().query(
       `SELECT id, autor_id, caminho_arquivo FROM grupo_atividades
        WHERE id = ? AND grupo_id = ? LIMIT 1`,
@@ -69,11 +76,6 @@ app.delete('/api/grupos/:grupoId/atividades/:atividadeId', autenticar, async (re
     );
     if (!atividades.length) return res.status(404).json({ erro: 'Publicação não encontrada.' });
     const atividade = atividades[0];
-    const eAutor = Number(atividade.autor_id) === Number(req.usuario.id);
-    const eAdministrador = Number(grupo.administrador) === 1;
-    if (!eAutor && !eAdministrador) {
-      return res.status(403).json({ erro: 'Somente quem publicou ou um administrador pode remover esta publicação.' });
-    }
     await db.promise().query('DELETE FROM grupo_atividades WHERE id = ? AND grupo_id = ?', [atividade.id, grupo.id]);
     if (atividade.caminho_arquivo) {
       const caminhoArquivo = await localizarArquivoUpload(atividade.caminho_arquivo);
@@ -85,6 +87,38 @@ app.delete('/api/grupos/:grupoId/atividades/:atividadeId', autenticar, async (re
   } catch (erro) {
     console.error('Erro ao remover atividade do grupo:', erro);
     return res.status(500).json({ erro: 'Não foi possível remover a publicação.' });
+  }
+});
+
+// Cada participante pode marcar a própria atividade como concluída ou ocultar
+// um prazo vencido da própria agenda, sem alterar o estado dos demais membros.
+app.patch('/api/grupos/:grupoId/atividades/:atividadeId/estado', autenticar, async (req, res) => {
+  const { concluida, ocultar_calendario: ocultarCalendario } = req.body || {};
+  if (typeof concluida !== 'boolean' && typeof ocultarCalendario !== 'boolean') {
+    return res.status(400).json({ erro: 'Informe o estado que deseja atualizar.' });
+  }
+  try {
+    const grupo = await buscarGrupoDoParticipante(req.params.grupoId, req.usuario.id);
+    if (!grupo) return res.status(403).json({ erro: 'Você não participa deste grupo.' });
+    const [atividades] = await db.promise().query(
+      'SELECT id FROM grupo_atividades WHERE id = ? AND grupo_id = ? LIMIT 1',
+      [req.params.atividadeId, grupo.id]
+    );
+    if (!atividades.length) return res.status(404).json({ erro: 'Atividade não encontrada.' });
+    await db.promise().query(
+      `INSERT INTO grupo_atividade_estado (atividade_id, usuario_id, concluida, ocultar_calendario)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         concluida = IF(?, ?, concluida),
+         ocultar_calendario = IF(?, ?, ocultar_calendario)`,
+      [req.params.atividadeId, req.usuario.id, concluida === true ? 1 : 0, ocultarCalendario === true ? 1 : 0,
+        typeof concluida === 'boolean' ? 1 : 0, concluida === true ? 1 : 0,
+        typeof ocultarCalendario === 'boolean' ? 1 : 0, ocultarCalendario === true ? 1 : 0]
+    );
+    return res.json({ mensagem: 'Estado da atividade atualizado.' });
+  } catch (erro) {
+    console.error('Erro ao atualizar estado da atividade:', erro);
+    return res.status(500).json({ erro: 'Não foi possível atualizar a atividade.' });
   }
 });
 

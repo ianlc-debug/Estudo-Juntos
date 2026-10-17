@@ -95,31 +95,66 @@ export function renderizarHorariosInicio() {
 /** Lista, na barra lateral direita, as tarefas pendentes de todos os grupos. */
 export function renderizarTarefasGlobais() {
   if (!containerTarefasGlobais) return;
-  containerTarefasGlobais.innerHTML = "";
-
-  let totalPendentes = 0;
-
-  Object.keys(estado.bancoDeGrupos).forEach((chave) => {
-    const grupo = estado.bancoDeGrupos[chave];
-    grupo.tarefas.forEach((tarefa) => {
-      if (!tarefa.concluida) {
-        totalPendentes++;
-        const itemHTML = `
-                        <div class="item-tarefa-global">
-                            <span>${tarefa.texto}</span>
-                            <small><i class="fa-solid fa-graduation-cap"></i> Grupo: ${grupo.nome}</small>
-                        </div>
-                    `;
-        containerTarefasGlobais.insertAdjacentHTML("beforeend", itemHTML);
+  containerTarefasGlobais.textContent = "Carregando tarefas…";
+  void (async () => {
+    try {
+      const resposta = await fetch(`${window.ESTUDO_API_URL}/api/tarefas-globais`, {
+        headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+      });
+      const texto = await resposta.text();
+      const tarefas = texto ? JSON.parse(texto) : [];
+      if (!resposta.ok) throw new Error(tarefas.erro || "Não foi possível carregar as tarefas.");
+      containerTarefasGlobais.replaceChildren();
+      tarefas.forEach((tarefa) => {
+        const item = document.createElement("div");
+        item.className = "item-tarefa-global";
+        item.style.cssText = "display:flex; align-items:flex-start; gap:8px;";
+        const concluir = document.createElement("input");
+        concluir.type = "checkbox";
+        concluir.setAttribute("aria-label", `Marcar ${tarefa.texto || tarefa.titulo} como concluída`);
+        concluir.addEventListener("change", async () => {
+          concluir.disabled = true;
+          try {
+            const url = tarefa.tipo === "evento"
+              ? `${window.ESTUDO_API_URL}/api/eventos-particulares/${tarefa.id}/concluida`
+              : `${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(tarefa.grupo_id)}/atividades/${tarefa.id}/estado`;
+            const respostaEstado = await fetch(url, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
+              body: JSON.stringify({ concluida: true }),
+            });
+            const conteudo = await respostaEstado.json();
+            if (!respostaEstado.ok) throw new Error(conteudo.erro || "Não foi possível concluir a tarefa.");
+            renderizarTarefasGlobais();
+            window.dispatchEvent(new Event("prazos-agenda-atualizados"));
+            if (tarefa.tipo === "evento") window.dispatchEvent(new Event("eventos-particulares-atualizados"));
+          } catch (erro) {
+            concluir.checked = false;
+            concluir.disabled = false;
+            alert(erro.message || "Não foi possível concluir a tarefa.");
+          }
+        });
+        const texto = document.createElement("span");
+        texto.textContent = tarefa.texto || tarefa.titulo || "Tarefa";
+        const detalhes = document.createElement("small");
+        detalhes.style.cssText = "display:block; color:#64748b;";
+        const prazo = tarefa.prazo ? ` • Prazo: ${new Date(`${String(tarefa.prazo).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR")}` : "";
+        detalhes.textContent = `${tarefa.tipo === "evento" ? "Evento pessoal" : `Grupo: ${tarefa.grupo_nome}`}${prazo}`;
+        const bloco = document.createElement("div");
+        bloco.append(texto, detalhes);
+        item.append(concluir, bloco);
+        containerTarefasGlobais.appendChild(item);
+      });
+      if (!tarefas.length) {
+        const vazio = document.createElement("p");
+        vazio.style.cssText = "color:#64748b; font-size:.9rem;";
+        vazio.textContent = "Nenhuma tarefa pendente";
+        containerTarefasGlobais.appendChild(vazio);
       }
-    });
-  });
-
-  if (totalPendentes === 0) {
-    containerTarefasGlobais.innerHTML = `
-                <div class="tarefas-vazias" style="padding: 5px 0;">
-                    <p style="color: #64748b; font-size: 0.9rem;">Nenhuma tarefa pendente</p>
-                </div>
-            `;
-  }
+    } catch (erro) {
+      containerTarefasGlobais.textContent = erro.message || "Não foi possível carregar suas tarefas.";
+    }
+  })();
 }
+
+window.addEventListener("tarefas-globais-atualizadas", renderizarTarefasGlobais);

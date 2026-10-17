@@ -19,6 +19,7 @@ export const estado = {
   tokenSessao: sessaoSalva.tokenSessao || null,
   bancoDeGrupos: {},
   bancoDeEventos: [],
+  bancoDePrazos: [],
   idGrupoEmEdicao: null,
   dataSelecionada: { dia: null, mes: null, ano: null },
   totalGruposCriados: 0,

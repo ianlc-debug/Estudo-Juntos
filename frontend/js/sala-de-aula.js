@@ -35,6 +35,9 @@ const mensagemConviteGrupo = document.getElementById("mensagem-convite-grupo");
 const campoRecadoSala = document.getElementById("campo-recado-sala");
 const botaoEnviarRecado = document.getElementById("btn-publicar-recado");
 const feedRecadosSala = document.getElementById("feed-recados-sala");
+const campoArquivoMural = document.getElementById("campo-arquivo-mural");
+const botaoAnexarMural = document.getElementById("btn-anexar-mural");
+const nomeArquivoMural = document.getElementById("nome-arquivo-mural");
 
 // Campos de Atividades (Tarefas)
 const campoTarefaSala = document.getElementById("campo-tarefa-sala");
@@ -43,6 +46,8 @@ const listaTarefasSala = document.getElementById("feed-tarefas-sala");
 const botaoAnexarAtividade = document.getElementById("btn-anexar-atividade");
 const campoArquivoAtividade = document.getElementById("campo-arquivo-atividade");
 const nomeArquivoAtividade = document.getElementById("nome-arquivo-atividade");
+const campoPrazoAtividade = document.getElementById("campo-prazo-atividade");
+const composerAtividadeSala = document.getElementById("composer-atividade-sala");
 
 // Formulário de Horários
 const painelGerenciarHorarios = document.getElementById("painel-gerenciar-horarios");
@@ -101,11 +106,15 @@ export async function abrirSalaDeAula(idGrupo) {
     botaoConvidarMembros.style.display = ehAdministrador ? "flex" : "none";
   }
   if (painelGerenciarHorarios) painelGerenciarHorarios.style.display = ehAdministrador ? "block" : "none";
+  if (composerAtividadeSala) composerAtividadeSala.style.display = ehAdministrador ? "flex" : "none";
 
   // Limpa campos de entrada
   if (campoRecadoSala) campoRecadoSala.value = "";
   if (campoTarefaSala) campoTarefaSala.value = "";
+  if (campoPrazoAtividade) campoPrazoAtividade.value = "";
   if (campoArquivoAtividade) campoArquivoAtividade.value = "";
+  if (campoArquivoMural) campoArquivoMural.value = "";
+  if (nomeArquivoMural) { nomeArquivoMural.textContent = ""; nomeArquivoMural.classList.add("escondido"); }
   if (nomeArquivoAtividade) {
     nomeArquivoAtividade.textContent = "";
     nomeArquivoAtividade.classList.add("escondido");
@@ -257,6 +266,14 @@ function criarCartaoAtividade(atividade, dadosGrupo) {
     cartao.appendChild(texto);
   }
 
+  if (atividade.prazo) {
+    const prazo = document.createElement("small");
+    const vencida = atividade.prazo < new Date().toISOString().slice(0, 10);
+    prazo.textContent = `${vencida ? "Prazo vencido" : "Prazo"}: ${new Date(`${atividade.prazo}T12:00:00`).toLocaleDateString("pt-BR")}`;
+    prazo.style.cssText = `display:block; margin:6px 0; color:${vencida ? "#dc2626" : "#475569"};`;
+    cartao.appendChild(prazo);
+  }
+
   if (atividade.nome_arquivo) {
     const linkArquivo = document.createElement("a");
     linkArquivo.className = "arquivo-atividade-grupo";
@@ -363,6 +380,8 @@ async function removerAtividadeDoGrupo(atividade, dadosGrupo, botao) {
       vazio.textContent = "Nenhuma atividade publicada ainda.";
       listaTarefasSala.appendChild(vazio);
     }
+    window.dispatchEvent(new Event("tarefas-globais-atualizadas"));
+    window.dispatchEvent(new Event("prazos-agenda-atualizados"));
   } catch (erro) {
     alert(erro.message || "Não foi possível remover a publicação.");
     botao.disabled = false;
@@ -419,6 +438,23 @@ function criarCartaoRecado(recado, dadosGrupo) {
   texto.style.cssText = "margin: 0; color: #334155; font-size: 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere;";
   cartao.appendChild(texto);
 
+  if (recado.nome_arquivo) {
+    const arquivo = document.createElement("a");
+    arquivo.href = "#";
+    arquivo.className = "arquivo-atividade-grupo";
+    arquivo.innerHTML = '<i class="fa-solid fa-paperclip" aria-hidden="true"></i>';
+    const nome = document.createElement("span");
+    nome.textContent = recado.nome_arquivo;
+    arquivo.appendChild(nome);
+    if (recado.tamanho_arquivo) {
+      const tamanho = document.createElement("small");
+      tamanho.textContent = formatarTamanhoArquivo(recado.tamanho_arquivo);
+      arquivo.appendChild(tamanho);
+    }
+    arquivo.addEventListener("click", (evento) => baixarArquivoMural(evento, recado, dadosGrupo));
+    cartao.appendChild(arquivo);
+  }
+
   const podeExcluir = dadosGrupo.ehAdministrador || Number(recado.autor_id) === Number(estado.usuarioAtualId);
   if (podeExcluir) {
     const acoes = document.createElement("div");
@@ -436,6 +472,27 @@ function criarCartaoRecado(recado, dadosGrupo) {
     cartao.appendChild(acoes);
   }
   return cartao;
+}
+
+async function baixarArquivoMural(evento, recado, dadosGrupo) {
+  evento.preventDefault();
+  try {
+    const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural/${encodeURIComponent(recado.id)}/arquivo`, {
+      headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+    });
+    if (!resposta.ok) {
+      const erro = await lerRespostaApi(resposta);
+      throw new Error(erro.erro || "Não foi possível baixar o arquivo.");
+    }
+    const url = URL.createObjectURL(await resposta.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = recado.nome_arquivo;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (erro) { alert(erro.message || "Não foi possível baixar o arquivo."); }
 }
 
 async function carregarRecadosDoGrupo() {
@@ -674,7 +731,9 @@ if (botaoEnviarRecado && campoRecadoSala) {
     evento.preventDefault();
     evento.stopPropagation();
     const texto = campoRecadoSala.value.trim();
-    if (!texto) return;
+    const arquivo = campoArquivoMural?.files?.[0] || null;
+    if (!texto && !arquivo) return;
+    if (arquivo && arquivo.size > 20_000_000) { alert("O arquivo deve ter no máximo 20 MB."); return; }
 
     const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
     if (!dadosGrupo) return;
@@ -685,10 +744,13 @@ if (botaoEnviarRecado && campoRecadoSala) {
     botaoEnviarRecado.disabled = true;
     botaoEnviarRecado.textContent = "Publicando…";
     try {
+      const formulario = new FormData();
+      formulario.append("texto", texto);
+      if (arquivo) formulario.append("arquivo", arquivo, arquivo.name);
       const resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/mural`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
-        body: JSON.stringify({ texto }),
+        headers: { Authorization: `Bearer ${estado.tokenSessao || ""}` },
+        body: formulario,
       });
       const resultado = await lerRespostaApi(resposta);
       if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível publicar o recado.");
@@ -697,6 +759,8 @@ if (botaoEnviarRecado && campoRecadoSala) {
       feedRecadosSala.querySelector(".estado-vazio-mural")?.remove();
       feedRecadosSala.prepend(criarCartaoRecado(resultado, dadosGrupo));
       campoRecadoSala.value = "";
+      if (campoArquivoMural) campoArquivoMural.value = "";
+      if (nomeArquivoMural) { nomeArquivoMural.textContent = ""; nomeArquivoMural.classList.add("escondido"); }
     } catch (erro) {
       alert(erro.message || "Não foi possível publicar o recado.");
     } finally {
@@ -705,6 +769,14 @@ if (botaoEnviarRecado && campoRecadoSala) {
     }
   });
 }
+
+botaoAnexarMural?.addEventListener("click", () => campoArquivoMural?.click());
+campoArquivoMural?.addEventListener("change", () => {
+  const arquivo = campoArquivoMural.files?.[0];
+  if (!nomeArquivoMural) return;
+  nomeArquivoMural.textContent = arquivo ? `${arquivo.name} • ${formatarTamanhoArquivo(arquivo.size)}` : "";
+  nomeArquivoMural.classList.toggle("escondido", !arquivo);
+});
 
 botaoAnexarAtividade?.addEventListener("click", () => campoArquivoAtividade?.click());
 
@@ -724,6 +796,7 @@ if (botaoPublicarTarefa) {
     const dadosGrupo = estado.bancoDeGrupos[estado.idGrupoEmEdicao];
     const texto = campoTarefaSala?.value.trim() || "";
     const arquivo = campoArquivoAtividade?.files?.[0] || null;
+    const prazo = campoPrazoAtividade?.value || null;
     if (!dadosGrupo || (!texto && !arquivo)) {
       alert("Escreva um texto ou anexe um arquivo para publicar.");
       return;
@@ -739,6 +812,7 @@ if (botaoPublicarTarefa) {
       if (arquivo) {
         const formulario = new FormData();
         formulario.append("texto", texto);
+        if (prazo) formulario.append("prazo", prazo);
         formulario.append("arquivo", arquivo, arquivo.name);
         resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades/arquivo`, {
           method: "POST",
@@ -749,7 +823,7 @@ if (botaoPublicarTarefa) {
         resposta = await fetch(`${window.ESTUDO_API_URL}/api/grupos/${encodeURIComponent(dadosGrupo.id_unico)}/atividades`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${estado.tokenSessao || ""}` },
-          body: JSON.stringify({ texto }),
+          body: JSON.stringify({ texto, prazo }),
         });
       }
       const resultado = await lerRespostaApi(resposta);
@@ -757,6 +831,7 @@ if (botaoPublicarTarefa) {
       const atividade = {
         id: resultado.id,
         texto,
+        prazo,
         autor: estado.usuarioAtual,
         autor_id: estado.usuarioAtualId,
         criado_em: new Date().toISOString(),
@@ -768,11 +843,14 @@ if (botaoPublicarTarefa) {
       listaTarefasSala.querySelector(".estado-vazio-atividades")?.remove();
       listaTarefasSala.prepend(criarCartaoAtividade(atividade, dadosGrupo));
       if (campoTarefaSala) campoTarefaSala.value = "";
+      if (campoPrazoAtividade) campoPrazoAtividade.value = "";
       if (campoArquivoAtividade) campoArquivoAtividade.value = "";
       if (nomeArquivoAtividade) {
         nomeArquivoAtividade.textContent = "";
         nomeArquivoAtividade.classList.add("escondido");
       }
+      window.dispatchEvent(new Event("tarefas-globais-atualizadas"));
+      window.dispatchEvent(new Event("prazos-agenda-atualizados"));
     } catch (erro) {
       alert(erro.message || "Não foi possível publicar a atividade.");
     } finally {

@@ -156,7 +156,7 @@ function lerFormularioAtividade(buffer, contentType) {
   if (!boundaryTexto) throw new Error('O formulário do arquivo está inválido.');
   const boundary = Buffer.from(`--${boundaryTexto}`);
   const separadorCabecalho = Buffer.from('\r\n\r\n');
-  const formulario = { texto: '', arquivo: null };
+  const formulario = { texto: '', prazo: '', arquivo: null };
   let cursor = buffer.indexOf(boundary);
 
   while (cursor !== -1) {
@@ -173,6 +173,7 @@ function lerFormularioAtividade(buffer, contentType) {
       const conteudo = parte.subarray(separador + separadorCabecalho.length);
       const nomeCampo = /(?:^|;)\s*name="([^"]+)"/i.exec(cabecalho)?.[1];
       if (nomeCampo === 'texto') formulario.texto = conteudo.toString('utf8');
+      if (nomeCampo === 'prazo') formulario.prazo = conteudo.toString('utf8').trim();
       if (nomeCampo === 'arquivo') {
         const nome = /(?:^|;)\s*filename="([^"]*)"/i.exec(cabecalho)?.[1];
         const tipo = /^content-type:\s*([^\r\n]+)/im.exec(cabecalho)?.[1]?.trim();

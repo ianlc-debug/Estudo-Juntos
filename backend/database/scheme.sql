@@ -96,6 +96,7 @@ CREATE TABLE grupo_atividades (
     caminho_arquivo VARCHAR(100) NULL,
     tipo_arquivo VARCHAR(150) NULL,
     tamanho_arquivo BIGINT UNSIGNED NULL,
+    prazo DATE NULL,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_grupo_atividades_grupo FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE,
     CONSTRAINT fk_grupo_atividades_autor FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -107,6 +108,10 @@ CREATE TABLE grupo_recados (
     grupo_id INT NOT NULL,
     autor_id INT NOT NULL,
     texto TEXT NOT NULL,
+    nome_arquivo VARCHAR(255) NULL,
+    caminho_arquivo VARCHAR(100) NULL,
+    tipo_arquivo VARCHAR(150) NULL,
+    tamanho_arquivo BIGINT UNSIGNED NULL,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_grupo_recados_grupo FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE,
     CONSTRAINT fk_grupo_recados_autor FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -118,9 +123,21 @@ CREATE TABLE eventos_particulares (
     usuario_id INT NOT NULL,
     titulo VARCHAR(255) NOT NULL,
     data_evento DATE NOT NULL,
+    concluida TINYINT NOT NULL DEFAULT 0,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_eventos_particulares_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     INDEX idx_eventos_particulares_usuario_data (usuario_id, data_evento)
+);
+
+CREATE TABLE grupo_atividade_estado (
+    atividade_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    concluida TINYINT NOT NULL DEFAULT 0,
+    ocultar_calendario TINYINT NOT NULL DEFAULT 0,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (atividade_id, usuario_id),
+    CONSTRAINT fk_atividade_estado_atividade FOREIGN KEY (atividade_id) REFERENCES grupo_atividades(id) ON DELETE CASCADE,
+    CONSTRAINT fk_atividade_estado_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE convites_grupo (
