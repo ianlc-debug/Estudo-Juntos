@@ -243,6 +243,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
 
     localStorage.clear();
     sessionStorage.removeItem("estudoJuntosSessao");
+    document.documentElement.classList.remove("sessao-salva");
     window.dispatchEvent(new Event("estudo-juntos:sessaoencerrada"));
     sessionStorage.removeItem("estudoJuntosGrupoAtual");
     sessionStorage.removeItem("estudoJuntosPosicaoScroll");
@@ -276,6 +277,7 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
           estado.usuarioAtualIdPublico = null;
           estado.tokenSessao = null;
           sessionStorage.removeItem("estudoJuntosSessao");
+          document.documentElement.classList.remove("sessao-salva");
           telaPainel.classList.add("escondido");
           telaLogin.classList.remove("escondido");
           return;

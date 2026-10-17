@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="api-base-url" content="https://estudo-juntos.onrender.com" />
+    <script>
+      try {
+        const sessaoSalva = JSON.parse(sessionStorage.getItem("estudoJuntosSessao") || "null");
+        if (sessaoSalva?.tokenSessao) document.documentElement.classList.add("sessao-salva");
+      } catch {}
+    </script>
+    <style>
+      html.sessao-salva #tela-login { display: none !important; }
+      html.sessao-salva #tela-painel { display: flex !important; }
+    </style>
     <title>Estudo+Juntos</title>
     <!-- Base -->
     <link rel="stylesheet" href="css/base/reset.css" />
