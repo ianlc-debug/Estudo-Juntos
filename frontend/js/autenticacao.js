@@ -257,6 +257,14 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
 
   // Mantém a sessão ativa se uma ação acidentalmente recarregar a página.
   if (estado.tokenSessao) {
+    // Evita mostrar o formulário de login durante a validação da sessão salva.
+    // Sem isso, o painel só aparece depois da resposta da API e parece que o
+    // usuário foi deslogado até interagir com a página.
+    telaLogin.classList.add("escondido");
+    telaPainel.classList.remove("escondido");
+    if (textoBoasVindas) textoBoasVindas.textContent = `OLÁ, ${estado.usuarioAtual.toUpperCase()}`;
+    if (fotoPerfil) fotoPerfil.textContent = estado.usuarioAtual.charAt(0).toUpperCase();
+
     fetch(window.ESTUDO_API_URL + "/api/grupos", {
       headers: { Authorization: `Bearer ${estado.tokenSessao}` },
     }).then(async (resposta) => {
@@ -268,6 +276,8 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
           estado.usuarioAtualIdPublico = null;
           estado.tokenSessao = null;
           sessionStorage.removeItem("estudoJuntosSessao");
+          telaPainel.classList.add("escondido");
+          telaLogin.classList.remove("escondido");
           return;
         }
         throw new Error("Não foi possível validar a sessão.");
@@ -284,7 +294,10 @@ export function inicializarAutenticacao(aoLogarComSucesso) {
         await abrirSalaDeAula(grupoSalvo);
       } else {
         sessionStorage.removeItem("estudoJuntosGrupoAtual");
-        mostrarView("inicio", "inicio");
+        const viewSalva = window.location.hash.slice(1);
+        const viewsDisponiveis = new Set(["inicio", "grupos", "agenda", "recursos", "mensagens", "perfil"]);
+        const viewInicial = viewsDisponiveis.has(viewSalva) ? viewSalva : "inicio";
+        mostrarView(viewInicial, viewInicial, false);
       }
       aoLogarComSucesso?.();
     }).catch((erro) => console.error("Não foi possível restaurar a sessão:", erro));
