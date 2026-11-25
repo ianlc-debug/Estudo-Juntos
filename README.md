@@ -74,7 +74,7 @@ O projeto não contém framework frontend, ORM, serviço de e-mail nem Socket.IO
 
 O navegador carrega a interface estática e envia as chamadas à API Express. A API autentica as rotas privadas, acessa o MySQL/TiDB e entrega atualizações de mensagens e notificações por conexões SSE. Os arquivos anexados ficam no sistema de arquivos do servidor, enquanto seus metadados são registrados no banco.
 
-`frontend/js/configuracao-api.js` define a URL da API. O valor de `<meta name="api-base-url">` em `frontend/index.html` tem prioridade; sem ele, a interface usa `localhost:3000` ao ser aberta pelo Live Server na porta 5500 e, nos demais casos, tenta usar a mesma origem da página.
+`frontend/js/configuracao-api.js` escolhe a URL da API automaticamente. Quando a página é aberta em `localhost`, `127.0.0.1` ou `::1`, a interface usa o backend local na porta 3000 (ou a mesma origem se o backend também estiver servindo a página). Em outros endereços, usa `<meta name="api-base-url">` ou a mesma origem. Assim, a configuração de produção não impede o desenvolvimento local.
 
 ## Estrutura do repositório
 
@@ -148,6 +148,12 @@ npm start
 O servidor deve iniciar na porta configurada e registrar no terminal se conectou ao banco. A API inclui `GET /health`, que retorna o estado básico do serviço. O backend também serve a interface em `http://localhost:3000/app/`.
 
 Para desenvolver apenas a interface, abra `frontend/index.html` com Live Server (normalmente na porta 5500) enquanto o backend está rodando na porta 3000.
+
+### Usar sem internet
+
+O modo offline funciona somente quando **todos os serviços necessários estão no próprio computador**. Instale as dependências do Node.js antes de ficar sem internet, mantenha um servidor MySQL local em execução e configure `backend/.env` com `DB_HOST=localhost`, a porta, usuário, senha e banco locais. Crie o banco e execute `backend/database/scheme.sql`. Depois, inicie a API (`npm start` em `backend/`) e abra a interface local. Em `localhost`, ela escolhe automaticamente `http://localhost:3000`, sem chamar Render ou TiDB Cloud.
+
+Se `DB_HOST` apontar para TiDB Cloud ou outro servidor remoto, o banco continuará exigindo internet. O MySQL Workbench é um cliente de administração; ele não substitui o servidor MySQL local. A folha de estilos do Font Awesome ainda vem de um CDN, então os ícones podem não aparecer offline; as demais telas e funções locais não dependem desse CDN.
 
 ## Banco de dados e migrações
 
